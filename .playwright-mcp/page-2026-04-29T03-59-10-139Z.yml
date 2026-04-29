@@ -1,0 +1,91 @@
+- main [ref=e3]:
+  - complementary [ref=e4]:
+    - strong [ref=e5]: EC Admin
+    - navigation [ref=e6]:
+      - button "控制台" [ref=e7] [cursor=pointer]
+      - button "商品管理" [ref=e8] [cursor=pointer]
+      - button "分类管理" [ref=e9] [cursor=pointer]
+      - button "订单管理" [active] [ref=e10] [cursor=pointer]
+      - button "用户管理" [ref=e11] [cursor=pointer]
+      - button "公告管理" [ref=e12] [cursor=pointer]
+      - button "系统监控" [ref=e13] [cursor=pointer]
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - paragraph [ref=e17]: 订单管理
+        - heading "订单管理" [level=1] [ref=e161]
+      - generic [ref=e19]:
+        - button "刷新" [ref=e20] [cursor=pointer]
+        - link "Nacos" [ref=e21] [cursor=pointer]:
+          - /url: http://localhost:8848/nacos
+    - generic [ref=e162]:
+      - combobox "订单状态" [ref=e163]:
+        - option "全部状态" [selected]
+        - option "待支付"
+        - option "已支付"
+        - option "已发货"
+      - button "导出订单" [ref=e164] [cursor=pointer]
+    - generic [ref=e165]:
+      - generic [ref=e166]:
+        - heading "订单列表" [level=2] [ref=e167]
+        - generic [ref=e168]: 4 条记录
+      - table [ref=e169]:
+        - rowgroup [ref=e170]:
+          - row "订单号 用户 手机号 金额 支付 状态 时间 操作" [ref=e171]:
+            - columnheader "订单号" [ref=e172]
+            - columnheader "用户" [ref=e173]
+            - columnheader "手机号" [ref=e174]
+            - columnheader "金额" [ref=e175]
+            - columnheader "支付" [ref=e176]
+            - columnheader "状态" [ref=e177]
+            - columnheader "时间" [ref=e178]
+            - columnheader "操作" [ref=e179]
+        - rowgroup [ref=e180]:
+          - row "#9001 Alice 13800000001 ¥598 MOCK_PAY PAID 2026-04-29 09:22 详情 发货" [ref=e181]:
+            - cell "#9001" [ref=e182]
+            - cell "Alice" [ref=e183]
+            - cell "13800000001" [ref=e184]
+            - cell "¥598" [ref=e185]
+            - cell "MOCK_PAY" [ref=e186]
+            - cell "PAID" [ref=e187]:
+              - generic [ref=e188]: PAID
+            - cell "2026-04-29 09:22" [ref=e189]
+            - cell "详情 发货" [ref=e190]:
+              - button "详情" [ref=e191] [cursor=pointer]
+              - button "发货" [ref=e192] [cursor=pointer]
+          - row "#9002 Ming 13800000002 ¥399 UNPAID PENDING_PAYMENT 2026-04-29 09:40 详情 发货" [ref=e193]:
+            - cell "#9002" [ref=e194]
+            - cell "Ming" [ref=e195]
+            - cell "13800000002" [ref=e196]
+            - cell "¥399" [ref=e197]
+            - cell "UNPAID" [ref=e198]
+            - cell "PENDING_PAYMENT" [ref=e199]:
+              - generic [ref=e200]: PENDING_PAYMENT
+            - cell "2026-04-29 09:40" [ref=e201]
+            - cell "详情 发货" [ref=e202]:
+              - button "详情" [ref=e203] [cursor=pointer]
+              - button "发货" [ref=e204] [cursor=pointer]
+          - row "#9003 Chen 13800000003 ¥59 MOCK_PAY PAID 2026-04-29 10:02 详情 发货" [ref=e205]:
+            - cell "#9003" [ref=e206]
+            - cell "Chen" [ref=e207]
+            - cell "13800000003" [ref=e208]
+            - cell "¥59" [ref=e209]
+            - cell "MOCK_PAY" [ref=e210]
+            - cell "PAID" [ref=e211]:
+              - generic [ref=e212]: PAID
+            - cell "2026-04-29 10:02" [ref=e213]
+            - cell "详情 发货" [ref=e214]:
+              - button "详情" [ref=e215] [cursor=pointer]
+              - button "发货" [ref=e216] [cursor=pointer]
+          - row "#9004 Lin 13800000004 ¥88 MOCK_PAY SHIPPED 2026-04-29 10:18 详情 发货" [ref=e217]:
+            - cell "#9004" [ref=e218]
+            - cell "Lin" [ref=e219]
+            - cell "13800000004" [ref=e220]
+            - cell "¥88" [ref=e221]
+            - cell "MOCK_PAY" [ref=e222]
+            - cell "SHIPPED" [ref=e223]:
+              - generic [ref=e224]: SHIPPED
+            - cell "2026-04-29 10:18" [ref=e225]
+            - cell "详情 发货" [ref=e226]:
+              - button "详情" [ref=e227] [cursor=pointer]
+              - button "发货" [ref=e228] [cursor=pointer]

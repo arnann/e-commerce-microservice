@@ -1,0 +1,81 @@
+- main [ref=e3]:
+  - complementary [ref=e4]:
+    - strong [ref=e5]: EC Admin
+    - navigation [ref=e6]:
+      - button "控制台" [ref=e7] [cursor=pointer]
+      - button "商品管理" [ref=e8] [cursor=pointer]
+      - button "分类管理" [ref=e9] [cursor=pointer]
+      - button "订单管理" [ref=e10] [cursor=pointer]
+      - button "用户管理" [ref=e11] [cursor=pointer]
+      - button "公告管理" [ref=e12] [cursor=pointer]
+      - button "系统监控" [ref=e13] [cursor=pointer]
+  - generic [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - paragraph [ref=e17]: 控制台
+        - heading "控制台" [level=1] [ref=e18]
+      - generic [ref=e19]:
+        - button "刷新" [ref=e20] [cursor=pointer]
+        - link "Nacos" [ref=e21] [cursor=pointer]:
+          - /url: http://localhost:8848/nacos
+    - region "核心指标" [ref=e22]:
+      - generic [ref=e23]:
+        - text: 上架商品
+        - strong [ref=e24]: "3"
+      - generic [ref=e25]:
+        - text: 已支付订单
+        - strong [ref=e26]: "2"
+      - generic [ref=e27]:
+        - text: 待支付订单
+        - strong [ref=e28]: "1"
+      - generic [ref=e29]:
+        - text: 已支付金额
+        - strong [ref=e30]: ¥657
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - heading "待处理事项" [level=2] [ref=e34]
+        - generic [ref=e35]:
+          - generic [ref=e36]: 低库存商品
+          - strong [ref=e37]: "2"
+        - generic [ref=e38]:
+          - generic [ref=e39]: 待支付订单
+          - strong [ref=e40]: "1"
+        - generic [ref=e41]:
+          - generic [ref=e42]: 草稿公告
+          - strong [ref=e43]: "1"
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - heading "最近订单" [level=2] [ref=e46]
+          - button "查看订单" [ref=e47] [cursor=pointer]
+        - table [ref=e48]:
+          - rowgroup [ref=e49]:
+            - row "订单号 用户 金额 状态" [ref=e50]:
+              - columnheader "订单号" [ref=e51]
+              - columnheader "用户" [ref=e52]
+              - columnheader "金额" [ref=e53]
+              - columnheader "状态" [ref=e54]
+          - rowgroup [ref=e55]:
+            - row "#9001 Alice ¥598 PAID" [ref=e56]:
+              - cell "#9001" [ref=e57]
+              - cell "Alice" [ref=e58]
+              - cell "¥598" [ref=e59]
+              - cell "PAID" [ref=e60]:
+                - generic [ref=e61]: PAID
+            - row "#9002 Ming ¥399 PENDING_PAYMENT" [ref=e62]:
+              - cell "#9002" [ref=e63]
+              - cell "Ming" [ref=e64]
+              - cell "¥399" [ref=e65]
+              - cell "PENDING_PAYMENT" [ref=e66]:
+                - generic [ref=e67]: PENDING_PAYMENT
+            - row "#9003 Chen ¥59 PAID" [ref=e68]:
+              - cell "#9003" [ref=e69]
+              - cell "Chen" [ref=e70]
+              - cell "¥59" [ref=e71]
+              - cell "PAID" [ref=e72]:
+                - generic [ref=e73]: PAID
+            - row "#9004 Lin ¥88 SHIPPED" [ref=e74]:
+              - cell "#9004" [ref=e75]
+              - cell "Lin" [ref=e76]
+              - cell "¥88" [ref=e77]
+              - cell "SHIPPED" [ref=e78]:
+                - generic [ref=e79]: SHIPPED

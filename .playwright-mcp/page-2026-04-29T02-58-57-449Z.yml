@@ -1,0 +1,114 @@
+- main [ref=e3]:
+  - complementary [ref=e4]:
+    - strong [ref=e5]: EC Shop
+    - navigation [ref=e6]:
+      - link "总览" [ref=e7] [cursor=pointer]:
+        - /url: "#overview"
+      - link "商品" [ref=e8] [cursor=pointer]:
+        - /url: "#products"
+      - link "购物车" [ref=e9] [cursor=pointer]:
+        - /url: "#cart"
+      - link "推荐" [ref=e10] [cursor=pointer]:
+        - /url: "#recommend"
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: 总览
+        - heading "轻量电商商城端" [level=1] [ref=e15]
+      - button "同步商品" [ref=e16] [cursor=pointer]
+    - region "核心指标" [ref=e17]:
+      - generic [ref=e18]:
+        - text: 商品数量
+        - strong [ref=e19]: "4"
+      - generic [ref=e20]:
+        - text: 库存合计
+        - strong [ref=e21]: "186"
+      - generic [ref=e22]:
+        - text: 销量合计
+        - strong [ref=e23]: "490"
+      - generic [ref=e24]:
+        - text: 购物车金额
+        - strong [ref=e25]: ¥0
+    - generic [ref=e26]:
+      - textbox "搜索商品" [ref=e27]
+      - combobox "排序" [ref=e28]:
+        - option "销量优先" [selected]
+        - option "价格从低到高"
+        - option "价格从高到低"
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "商品列表" [level=2] [ref=e32]
+          - button "加入购物车" [ref=e33] [cursor=pointer]
+        - table [ref=e34]:
+          - rowgroup [ref=e35]:
+            - row "商品 分类 价格 库存 销量 操作" [ref=e36] [cursor=pointer]:
+              - columnheader "商品" [ref=e37]
+              - columnheader "分类" [ref=e38]
+              - columnheader "价格" [ref=e39]
+              - columnheader "库存" [ref=e40]
+              - columnheader "销量" [ref=e41]
+              - columnheader "操作" [ref=e42]
+          - rowgroup [ref=e43]:
+            - row "运动水杯 运动水杯 11 ¥59 90 212 选择" [ref=e44] [cursor=pointer]:
+              - cell "运动水杯 运动水杯" [ref=e45]:
+                - generic [ref=e46]:
+                  - img "运动水杯" [ref=e47]
+                  - text: 运动水杯
+              - cell "11" [ref=e48]
+              - cell "¥59" [ref=e49]
+              - cell "90" [ref=e50]
+              - cell "212" [ref=e51]
+              - cell "选择" [ref=e52]:
+                - button "选择" [ref=e53]
+            - row "无线降噪耳机 无线降噪耳机 10 ¥299 36 128 选择" [ref=e54] [cursor=pointer]:
+              - cell "无线降噪耳机 无线降噪耳机" [ref=e55]:
+                - generic [ref=e56]:
+                  - img "无线降噪耳机" [ref=e57]
+                  - text: 无线降噪耳机
+              - cell "10" [ref=e58]
+              - cell "¥299" [ref=e59]
+              - cell "36" [ref=e60]
+              - cell "128" [ref=e61]
+              - cell "选择" [ref=e62]:
+                - button "选择" [ref=e63]
+            - row "机械键盘 机械键盘 10 ¥399 18 84 选择" [ref=e64] [cursor=pointer]:
+              - cell "机械键盘 机械键盘" [ref=e65]:
+                - generic [ref=e66]:
+                  - img "机械键盘" [ref=e67]
+                  - text: 机械键盘
+              - cell "10" [ref=e68]
+              - cell "¥399" [ref=e69]
+              - cell "18" [ref=e70]
+              - cell "84" [ref=e71]
+              - cell "选择" [ref=e72]:
+                - button "选择" [ref=e73]
+            - row "微服务实践手册 微服务实践手册 12 ¥88 42 66 选择" [ref=e74] [cursor=pointer]:
+              - cell "微服务实践手册 微服务实践手册" [ref=e75]:
+                - generic [ref=e76]:
+                  - img "微服务实践手册" [ref=e77]
+                  - text: 微服务实践手册
+              - cell "12" [ref=e78]
+              - cell "¥88" [ref=e79]
+              - cell "42" [ref=e80]
+              - cell "66" [ref=e81]
+              - cell "选择" [ref=e82]:
+                - button "选择" [ref=e83]
+      - complementary [ref=e84]:
+        - heading "当前商品" [level=2] [ref=e86]
+        - generic [ref=e87]:
+          - img "无线降噪耳机" [ref=e88]
+          - strong [ref=e89]: 无线降噪耳机
+          - generic [ref=e90]: ¥299
+          - paragraph [ref=e91]: 通勤、学习和运动都能稳定使用的蓝牙耳机。
+        - generic [ref=e92]:
+          - heading "同类推荐" [level=3] [ref=e93]
+          - button "机械键盘 ¥399" [ref=e94] [cursor=pointer]:
+            - text: 机械键盘
+            - generic [ref=e95]: ¥399
+        - generic [ref=e96]:
+          - heading "购物车" [level=3] [ref=e97]
+          - paragraph [ref=e98]: 暂无商品
+          - generic [ref=e99]:
+            - generic [ref=e100]: 合计
+            - strong [ref=e101]: ¥0

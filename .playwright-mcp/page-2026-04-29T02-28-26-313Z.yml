@@ -1,0 +1,62 @@
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - paragraph [ref=e6]: Mall Workspace
+      - heading "轻量电商商城端" [level=1] [ref=e7]
+      - paragraph [ref=e8]: 浏览商品、加入购物车、生成订单，这里串起用户侧的核心购买闭环。
+      - generic [ref=e9]:
+        - textbox "搜索商品" [ref=e10]
+        - combobox "排序" [ref=e11]:
+          - option "销量优先" [selected]
+          - option "价格从低到高"
+          - option "价格从高到低"
+    - img "无线降噪耳机" [ref=e12]
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - article [ref=e15] [cursor=pointer]:
+        - img "运动水杯" [ref=e16]
+        - generic [ref=e17]:
+          - heading "运动水杯" [level=2] [ref=e18]
+          - paragraph [ref=e19]: 大容量防漏杯，轻便耐用。
+          - text: 库存 90 · 销量 212
+        - strong [ref=e20]: ¥59
+      - article [ref=e21] [cursor=pointer]:
+        - img "无线降噪耳机" [ref=e22]
+        - generic [ref=e23]:
+          - heading "无线降噪耳机" [level=2] [ref=e24]
+          - paragraph [ref=e25]: 通勤、学习和运动都能稳定使用的蓝牙耳机。
+          - text: 库存 36 · 销量 128
+        - strong [ref=e26]: ¥299
+      - article [ref=e27] [cursor=pointer]:
+        - img "机械键盘" [ref=e28]
+        - generic [ref=e29]:
+          - heading "机械键盘" [level=2] [ref=e30]
+          - paragraph [ref=e31]: 热插拔轴体，适合代码、论文和日常办公。
+          - text: 库存 18 · 销量 84
+        - strong [ref=e32]: ¥399
+      - article [ref=e33] [cursor=pointer]:
+        - img "微服务实践手册" [ref=e34]
+        - generic [ref=e35]:
+          - heading "微服务实践手册" [level=2] [ref=e36]
+          - paragraph [ref=e37]: 覆盖注册发现、网关、限流、消息队列和部署。
+          - text: 库存 42 · 销量 66
+        - strong [ref=e38]: ¥88
+    - complementary [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - text: 当前商品
+          - heading "无线降噪耳机" [level=2] [ref=e42]
+        - strong [ref=e43]: ¥299
+      - paragraph [ref=e44]: 通勤、学习和运动都能稳定使用的蓝牙耳机。
+      - button "加入购物车" [ref=e45] [cursor=pointer]
+      - generic [ref=e46]:
+        - heading "同类推荐" [level=3] [ref=e47]
+        - button "机械键盘 ¥399" [ref=e48] [cursor=pointer]:
+          - text: 机械键盘
+          - generic [ref=e49]: ¥399
+      - generic [ref=e50]:
+        - heading "购物车" [level=3] [ref=e51]
+        - paragraph [ref=e52]: 暂无商品
+        - generic [ref=e53]:
+          - generic [ref=e54]: 合计
+          - strong [ref=e55]: ¥0

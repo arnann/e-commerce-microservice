@@ -1,0 +1,194 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: ecommerce-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: ecommerce_bootstrap
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./infra/mysql/init:/docker-entrypoint-initdb.d
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: ecommerce-nacos
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.8
+    container_name: ecommerce-sentinel
+    ports:
+      - "8858:8858"
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: ecommerce-rocketmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: ecommerce-rocketmq-broker
+    command: sh mqbroker -n rocketmq-namesrv:9876
+    depends_on:
+      - rocketmq-namesrv
+    ports:
+      - "10911:10911"
+
+  seata-server:
+    image: apache/seata-server:2.1.0
+    container_name: ecommerce-seata
+    environment:
+      SEATA_IP: seata-server
+    ports:
+      - "8091:8091"
+      - "7091:7091"
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: gateway-service
+    container_name: ecommerce-gateway
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+      AUTH_USER_SERVICE_URI: http://auth-user-service:8101
+      PRODUCT_SERVICE_URI: http://product-service:8102
+      TRADE_SERVICE_URI: http://trade-service:8103
+      SEARCH_SERVICE_URI: http://search-service:8104
+      MESSAGE_SERVICE_URI: http://message-service:8105
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+    ports:
+      - "8080:8080"
+
+  auth-user-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: auth-user-service
+    container_name: ecommerce-auth-user
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+    ports:
+      - "8101:8101"
+
+  product-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: product-service
+    container_name: ecommerce-product
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+    ports:
+      - "8102:8102"
+
+  trade-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: trade-service
+    container_name: ecommerce-trade
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+      - rocketmq-namesrv
+    ports:
+      - "8103:8103"
+
+  search-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: search-service
+    container_name: ecommerce-search
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+    ports:
+      - "8104:8104"
+
+  message-service:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE_NAME: message-service
+    container_name: ecommerce-message
+    environment:
+      NACOS_DISCOVERY_ENABLED: "true"
+      NACOS_SERVER_ADDR: nacos:8848
+      SENTINEL_DASHBOARD: sentinel-dashboard:8858
+      ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+    depends_on:
+      - nacos
+      - sentinel-dashboard
+      - rocketmq-namesrv
+    ports:
+      - "8105:8105"
+
+  shop-web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        APP_NAME: shop-web
+    container_name: ecommerce-shop-web
+    depends_on:
+      - gateway-service
+    ports:
+      - "3000:80"
+
+  admin-web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        APP_NAME: admin-web
+    container_name: ecommerce-admin-web
+    depends_on:
+      - gateway-service
+    ports:
+      - "3001:80"

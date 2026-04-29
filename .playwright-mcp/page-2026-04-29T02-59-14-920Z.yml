@@ -1,0 +1,123 @@
+- main [ref=e3]:
+  - complementary [ref=e4]:
+    - strong [ref=e5]: EC Admin
+    - navigation [ref=e6]:
+      - link "总览" [ref=e7] [cursor=pointer]:
+        - /url: "#overview"
+      - link "商品" [ref=e8] [cursor=pointer]:
+        - /url: "#products"
+      - link "订单" [ref=e9] [cursor=pointer]:
+        - /url: "#orders"
+      - link "公告" [ref=e10] [cursor=pointer]:
+        - /url: "#notices"
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - paragraph [ref=e14]: 总览
+        - heading "轻量电商管理后台" [level=1] [ref=e15]
+      - link "Nacos 控制台" [ref=e16] [cursor=pointer]:
+        - /url: http://localhost:8848/nacos
+    - region "核心指标" [ref=e17]:
+      - generic [ref=e18]:
+        - text: 已支付订单
+        - strong [ref=e19]: "2"
+      - generic [ref=e20]:
+        - text: 待支付订单
+        - strong [ref=e21]: "1"
+      - generic [ref=e22]:
+        - text: 已支付金额
+        - strong [ref=e23]: ¥657
+      - generic [ref=e24]:
+        - text: 低库存预警
+        - strong [ref=e25]: "2"
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - generic [ref=e28]:
+          - heading "商品管理" [level=2] [ref=e29]
+          - button "新增商品" [ref=e30] [cursor=pointer]
+        - table [ref=e31]:
+          - rowgroup [ref=e32]:
+            - row "商品 分类 价格 库存 状态" [ref=e33]:
+              - columnheader "商品" [ref=e34]
+              - columnheader "分类" [ref=e35]
+              - columnheader "价格" [ref=e36]
+              - columnheader "库存" [ref=e37]
+              - columnheader "状态" [ref=e38]
+          - rowgroup [ref=e39]:
+            - row "无线降噪耳机 数码配件 ¥299 36 ON_SALE" [ref=e40]:
+              - cell "无线降噪耳机" [ref=e41]
+              - cell "数码配件" [ref=e42]
+              - cell "¥299" [ref=e43]
+              - cell "36" [ref=e44]
+              - cell "ON_SALE" [ref=e45]
+            - row "机械键盘 数码配件 ¥399 2 ON_SALE" [ref=e46]:
+              - cell "机械键盘" [ref=e47]
+              - cell "数码配件" [ref=e48]
+              - cell "¥399" [ref=e49]
+              - cell "2" [ref=e50]
+              - cell "ON_SALE" [ref=e51]
+            - row "运动水杯 生活用品 ¥59 0 OFF_SALE" [ref=e52]:
+              - cell "运动水杯" [ref=e53]
+              - cell "生活用品" [ref=e54]
+              - cell "¥59" [ref=e55]
+              - cell "0" [ref=e56]
+              - cell "OFF_SALE" [ref=e57]
+            - row "微服务实践手册 图书资料 ¥88 42 ON_SALE" [ref=e58]:
+              - cell "微服务实践手册" [ref=e59]
+              - cell "图书资料" [ref=e60]
+              - cell "¥88" [ref=e61]
+              - cell "42" [ref=e62]
+              - cell "ON_SALE" [ref=e63]
+      - generic [ref=e64]:
+        - heading "库存预警" [level=2] [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]: 运动水杯
+          - strong [ref=e69]: 0 件
+        - generic [ref=e70]:
+          - generic [ref=e71]: 机械键盘
+          - strong [ref=e72]: 2 件
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - heading "订单管理" [level=2] [ref=e75]
+        - button "导出订单" [ref=e76] [cursor=pointer]
+      - table [ref=e77]:
+        - rowgroup [ref=e78]:
+          - row "订单号 用户 金额 状态 时间" [ref=e79]:
+            - columnheader "订单号" [ref=e80]
+            - columnheader "用户" [ref=e81]
+            - columnheader "金额" [ref=e82]
+            - columnheader "状态" [ref=e83]
+            - columnheader "时间" [ref=e84]
+        - rowgroup [ref=e85]:
+          - row "#9001 Alice ¥598 PAID 2026-04-29 09:22" [ref=e86]:
+            - cell "#9001" [ref=e87]
+            - cell "Alice" [ref=e88]
+            - cell "¥598" [ref=e89]
+            - cell "PAID" [ref=e90]
+            - cell "2026-04-29 09:22" [ref=e91]
+          - row "#9002 Ming ¥399 PENDING_PAYMENT 2026-04-29 09:40" [ref=e92]:
+            - cell "#9002" [ref=e93]
+            - cell "Ming" [ref=e94]
+            - cell "¥399" [ref=e95]
+            - cell "PENDING_PAYMENT" [ref=e96]
+            - cell "2026-04-29 09:40" [ref=e97]
+          - row "#9003 Chen ¥59 PAID 2026-04-29 10:02" [ref=e98]:
+            - cell "#9003" [ref=e99]
+            - cell "Chen" [ref=e100]
+            - cell "¥59" [ref=e101]
+            - cell "PAID" [ref=e102]
+            - cell "2026-04-29 10:02" [ref=e103]
+    - generic [ref=e104]:
+      - generic [ref=e105]:
+        - heading "公告管理" [level=2] [ref=e106]
+        - button "发布公告" [ref=e107] [cursor=pointer]
+      - generic [ref=e108]:
+        - generic [ref=e109]:
+          - strong [ref=e110]: 五一活动
+          - paragraph [ref=e111]: 全场商品满减已开启
+        - generic [ref=e112]: PUBLISHED
+      - generic [ref=e113]:
+        - generic [ref=e114]:
+          - strong [ref=e115]: 系统维护
+          - paragraph [ref=e116]: 今晚 23:00 网关配置更新
+        - generic [ref=e117]: DRAFT
