@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { orderStats, stockAlerts } from './operations.js';
+import { orderStats, paginate, stockAlerts } from './operations.js';
 
 describe('operations domain helpers', () => {
   it('summarizes order status and revenue', () => {
@@ -22,5 +22,14 @@ describe('operations domain helpers', () => {
     ], 5);
 
     expect(alerts.map((product) => product.id)).toEqual([3, 2]);
+  });
+
+  it('paginates and clamps out-of-range pages', () => {
+    const result = paginate([1, 2, 3, 4, 5], 4, 2);
+
+    expect(result.currentPage).toBe(3);
+    expect(result.totalPages).toBe(3);
+    expect(result.total).toBe(5);
+    expect(result.items).toEqual([5]);
   });
 });
