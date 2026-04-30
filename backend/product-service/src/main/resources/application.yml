@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: product-service
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:product_db}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   cloud:
     nacos:
       discovery:
@@ -12,3 +17,17 @@ spring:
     sentinel:
       transport:
         dashboard: ${SENTINEL_DASHBOARD:localhost:8858}
+
+seata:
+  enabled: ${SEATA_ENABLED:true}
+  application-id: ${spring.application.name}
+  tx-service-group: ${SEATA_TX_SERVICE_GROUP:default_tx_group}
+  registry:
+    type: file
+  config:
+    type: file
+  service:
+    vgroup-mapping:
+      default_tx_group: ${SEATA_SERVICE_GROUP:default}
+    grouplist:
+      default: ${SEATA_SERVER_ADDR:localhost:8091}

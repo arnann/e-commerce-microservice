@@ -30,6 +30,11 @@ public class MessageController {
         return ApiResponse.ok(messageCenterService.listPublishedNotices());
     }
 
+    @GetMapping("/notices/all")
+    public ApiResponse<?> listAllNotices() {
+        return ApiResponse.ok(messageCenterService.listAllNotices());
+    }
+
     @PostMapping("/users/{userId}/order-events")
     public ApiResponse<?> createOrderMessage(@PathVariable Long userId, @RequestBody CreateMessageRequest request) {
         return ApiResponse.ok(messageCenterService.createOrderMessage(userId, request.orderId(), request.content()));

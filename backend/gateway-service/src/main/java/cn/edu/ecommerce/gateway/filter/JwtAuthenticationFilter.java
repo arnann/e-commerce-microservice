@@ -15,7 +15,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_PATH_PREFIXES = List.of(
             "/api/auth/",
             "/api/products",
+            "/api/trade",
             "/api/search",
+            "/api/messages",
             "/actuator"
     );
 

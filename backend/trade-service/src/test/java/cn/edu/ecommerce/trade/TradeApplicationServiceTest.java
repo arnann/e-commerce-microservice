@@ -27,9 +27,26 @@ class TradeApplicationServiceTest {
         var paid = service.pay(order.id(), "MOCK_PAY");
 
         assertThat(cart.items()).hasSize(1);
+        assertThat(service.getCart(7L).items()).isEmpty();
         assertThat(order.totalAmount()).isEqualByComparingTo("598.00");
         assertThat(order.status()).isEqualTo(OrderStatus.PENDING_PAYMENT);
         assertThat(paid.orderStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(paid.paymentStatus()).isEqualTo(PaymentStatus.PAID);
+    }
+
+    @Test
+    void canAddSameProductAgainAfterOrderClearsCart() {
+        TradeApplicationService service = new TradeApplicationService(
+                new InMemoryTradeRepository(),
+                productId -> new ProductSnapshot(productId, "无线耳机", new BigDecimal("299.00"), 10)
+        );
+
+        service.addToCart(7L, 101L, 1);
+        service.createOrder(7L, Map.of(101L, 1));
+        CartView cart = service.addToCart(7L, 101L, 1);
+
+        assertThat(cart.items()).hasSize(1);
+        assertThat(cart.items().get(0).quantity()).isEqualTo(1);
+        assertThat(cart.totalAmount()).isEqualByComparingTo("299.00");
     }
 }

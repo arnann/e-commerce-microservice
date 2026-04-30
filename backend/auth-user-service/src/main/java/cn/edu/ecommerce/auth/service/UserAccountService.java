@@ -3,17 +3,20 @@ package cn.edu.ecommerce.auth.service;
 import cn.edu.ecommerce.auth.model.LoginResult;
 import cn.edu.ecommerce.auth.model.TokenPrincipal;
 import cn.edu.ecommerce.auth.model.UserAccount;
+import cn.edu.ecommerce.auth.model.UserAdminView;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserAccountService {
-    private final InMemoryUserRepository repository;
+    private final UserRepository repository;
     private final JwtTokenService tokenService;
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UserAccountService(InMemoryUserRepository repository, JwtTokenService tokenService) {
+    public UserAccountService(UserRepository repository, JwtTokenService tokenService) {
         this.repository = repository;
         this.tokenService = tokenService;
     }
@@ -35,6 +38,12 @@ public class UserAccountService {
 
     public TokenPrincipal parseToken(String token) {
         return tokenService.parse(token);
+    }
+
+    public List<UserAdminView> listUsers() {
+        return repository.findAll().stream()
+                .map(UserAdminView::from)
+                .toList();
     }
 
     private void validateCredentials(String email, String password) {

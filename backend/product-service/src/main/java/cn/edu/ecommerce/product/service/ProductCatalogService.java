@@ -10,9 +10,9 @@ import java.util.List;
 
 @Service
 public class ProductCatalogService {
-    private final InMemoryProductRepository repository;
+    private final ProductRepository repository;
 
-    public ProductCatalogService(InMemoryProductRepository repository) {
+    public ProductCatalogService(ProductRepository repository) {
         this.repository = repository;
     }
 
@@ -36,12 +36,40 @@ public class ProductCatalogService {
         return repository.createProduct(categoryId, name.trim(), description, price, stock);
     }
 
+    public List<Category> listCategories() {
+        return repository.findCategories();
+    }
+
     public ProductSummary publish(Long productId) {
         ProductSummary product = getProduct(productId);
         if (product.stock() <= 0) {
             throw new IllegalStateException("cannot publish product without stock");
         }
         return repository.save(product.withStatus(ProductStatus.ON_SALE));
+    }
+
+    public ProductSummary updateProduct(Long productId, Long categoryId, String name, String description, BigDecimal price, int stock, ProductStatus status) {
+        ProductSummary current = getProduct(productId);
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("product name required");
+        }
+        if (price == null || price.signum() <= 0) {
+            throw new IllegalArgumentException("positive price required");
+        }
+        if (stock < 0) {
+            throw new IllegalArgumentException("stock cannot be negative");
+        }
+        ProductSummary next = new ProductSummary(
+                current.id(),
+                categoryId == null ? current.categoryId() : categoryId,
+                name.trim(),
+                description,
+                price,
+                stock,
+                status == null ? current.status() : status,
+                current.createdAt()
+        );
+        return repository.save(next);
     }
 
     public ProductSummary reserveStock(Long productId, int quantity) {

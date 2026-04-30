@@ -108,6 +108,10 @@ services:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
+      SEATA_ENABLED: "true"
+      SEATA_SERVER_ADDR: seata-server:8091
+      SEATA_TX_SERVICE_GROUP: default_tx_group
+      SEATA_SERVICE_GROUP: default
     depends_on:
       - nacos
       - sentinel-dashboard
@@ -126,6 +130,11 @@ services:
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
       ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+      PRODUCT_SERVICE_URI: http://product-service:8102
+      SEATA_ENABLED: "true"
+      SEATA_SERVER_ADDR: seata-server:8091
+      SEATA_TX_SERVICE_GROUP: default_tx_group
+      SEATA_SERVICE_GROUP: default
     depends_on:
       - nacos
       - sentinel-dashboard

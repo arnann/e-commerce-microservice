@@ -8,9 +8,9 @@ import java.util.List;
 
 @Service
 public class MessageCenterService {
-    private final InMemoryMessageRepository repository;
+    private final MessageRepository repository;
 
-    public MessageCenterService(InMemoryMessageRepository repository) {
+    public MessageCenterService(MessageRepository repository) {
         this.repository = repository;
     }
 
@@ -26,6 +26,10 @@ public class MessageCenterService {
 
     public List<Notice> listPublishedNotices() {
         return repository.findPublishedNotices();
+    }
+
+    public List<Notice> listAllNotices() {
+        return repository.findAllNotices();
     }
 
     public UserMessage createOrderMessage(Long userId, Long orderId, String content) {

@@ -33,4 +33,9 @@ public class AuthController {
     public ApiResponse<String> health() {
         return ApiResponse.ok("auth-user-service");
     }
+
+    @GetMapping("/users")
+    public ApiResponse<?> listUsers() {
+        return ApiResponse.ok(userAccountService.listUsers());
+    }
 }

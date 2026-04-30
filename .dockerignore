@@ -1,0 +1,9 @@
+.git
+.playwright-mcp
+node_modules
+**/node_modules
+**/target
+**/dist
+docs
+*.log
+*.err.log

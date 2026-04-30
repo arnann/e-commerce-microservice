@@ -36,8 +36,18 @@ public class TradeController {
         return ApiResponse.ok(tradeApplicationService.createOrder(request.userId(), request.productQuantities()));
     }
 
+    @GetMapping("/orders")
+    public ApiResponse<?> listOrders() {
+        return ApiResponse.ok(tradeApplicationService.listOrders());
+    }
+
     @PostMapping("/orders/{orderId}/pay")
     public ApiResponse<?> pay(@PathVariable Long orderId, @RequestBody MockPayRequest request) {
         return ApiResponse.ok(tradeApplicationService.pay(orderId, request.channel()));
+    }
+
+    @PostMapping("/orders/{orderId}/ship")
+    public ApiResponse<?> ship(@PathVariable Long orderId) {
+        return ApiResponse.ok(tradeApplicationService.ship(orderId));
     }
 }

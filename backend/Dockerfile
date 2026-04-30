@@ -1,7 +1,8 @@
 FROM maven:3.9.9-eclipse-temurin-17 AS build
+ARG SERVICE_NAME
 WORKDIR /workspace
 COPY . .
-RUN mvn -q -DskipTests package
+RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests -pl backend/${SERVICE_NAME} -am package
 
 FROM eclipse-temurin:17-jre
 ARG SERVICE_NAME

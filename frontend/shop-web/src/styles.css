@@ -44,16 +44,30 @@ select {
   gap: 10px;
 }
 
-.sidebar a {
+.sidebar a,
+.sidebar button {
   border-radius: 6px;
+  border: 0;
+  background: transparent;
   color: #dce4d8;
   padding: 10px 12px;
+  text-align: left;
   text-decoration: none;
   transition: background 160ms ease;
 }
 
-.sidebar a:hover {
+.sidebar a:hover,
+.sidebar button:hover,
+.sidebar button.active {
   background: rgba(255, 255, 255, 0.1);
+}
+
+.toast {
+  margin: 0 0 18px;
+  border-left: 3px solid #a54f2a;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 10px 12px;
+  color: #27352f;
 }
 
 .content {

@@ -4,8 +4,6 @@ import cn.edu.ecommerce.common.IdGenerator;
 import cn.edu.ecommerce.product.model.Category;
 import cn.edu.ecommerce.product.model.ProductStatus;
 import cn.edu.ecommerce.product.model.ProductSummary;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
@@ -14,13 +12,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Repository
-public class InMemoryProductRepository {
+public class InMemoryProductRepository implements ProductRepository {
     private final IdGenerator categoryIds = new IdGenerator(1);
     private final IdGenerator productIds = new IdGenerator(100);
     private final Map<Long, Category> categories = new ConcurrentHashMap<>();
     private final Map<Long, ProductSummary> products = new ConcurrentHashMap<>();
 
+    @Override
     public Category createCategory(String name) {
         long id = categoryIds.nextId();
         Category category = new Category(id, name, Instant.now());
@@ -28,6 +26,14 @@ public class InMemoryProductRepository {
         return category;
     }
 
+    @Override
+    public List<Category> findCategories() {
+        return categories.values().stream()
+                .sorted(Comparator.comparing(Category::id))
+                .toList();
+    }
+
+    @Override
     public ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock) {
         if (!categories.containsKey(categoryId)) {
             throw new IllegalArgumentException("category not found");
@@ -47,15 +53,18 @@ public class InMemoryProductRepository {
         return product;
     }
 
+    @Override
     public Optional<ProductSummary> findProduct(Long id) {
         return Optional.ofNullable(products.get(id));
     }
 
+    @Override
     public ProductSummary save(ProductSummary product) {
         products.put(product.id(), product);
         return product;
     }
 
+    @Override
     public List<ProductSummary> findAll() {
         return products.values().stream()
                 .sorted(Comparator.comparing(ProductSummary::id))
