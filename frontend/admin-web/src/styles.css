@@ -223,6 +223,8 @@ button:disabled {
 }
 
 .workspace-block {
+  min-width: 0;
+  overflow-x: auto;
   margin-bottom: 24px;
   border: 1px solid rgba(29, 36, 32, 0.12);
   border-radius: 8px;
@@ -315,6 +317,12 @@ th {
 }
 
 .status[data-status="OFF_SALE"] {
+  background: rgba(178, 59, 44, 0.12);
+  color: #b23b2c;
+}
+
+.status[data-status="DISABLED"],
+.status[data-status="DOWN"] {
   background: rgba(178, 59, 44, 0.12);
   color: #b23b2c;
 }

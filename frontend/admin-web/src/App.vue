@@ -33,6 +33,7 @@ const labels = {
   OFF_SALE: '已下架',
   ENABLED: '已启用',
   NORMAL: '正常',
+  DISABLED: '已停用',
   PUBLISHED: '已发布',
   ADMIN: '管理员',
   CUSTOMER: '普通用户',
@@ -54,6 +55,7 @@ const services = ref([]);
 const productDraft = reactive(emptyProduct());
 const categoryDraft = reactive({ name: '' });
 const noticeDraft = reactive({ title: '', content: '' });
+const userDraft = reactive(emptyUser());
 const loginForm = reactive({ email: 'admin@example.com', password: 'demo123' });
 const currentAdmin = ref(null);
 const pages = reactive({ products: 1, categories: 1, orders: 1, users: 1, notices: 1 });
@@ -187,7 +189,7 @@ async function loadUsers() {
     name: user.nickname,
     email: user.email,
     role: user.role,
-    status: 'NORMAL'
+    status: user.status
   }));
 }
 
@@ -274,12 +276,72 @@ async function publishNotice() {
   }
   await api('/messages/notices', {
     method: 'POST',
-    body: JSON.stringify({ title: noticeDraft.title.trim(), content: noticeDraft.content.trim(), publisherId: 3 })
+    body: JSON.stringify({ title: noticeDraft.title.trim(), content: noticeDraft.content.trim(), publisherId: currentAdmin.value.userId })
   });
   noticeDraft.title = '';
   noticeDraft.content = '';
   await loadNotices();
   showToast('公告已发布');
+}
+
+function emptyUser() {
+  return { id: null, email: '', nickname: '', password: '', role: 'CUSTOMER', status: 'NORMAL' };
+}
+
+function newUser() {
+  Object.assign(userDraft, emptyUser());
+}
+
+function editUser(user) {
+  Object.assign(userDraft, {
+    id: user.id,
+    email: user.email,
+    nickname: user.name,
+    password: '',
+    role: user.role,
+    status: user.status
+  });
+}
+
+async function saveUser() {
+  const payload = {
+    email: userDraft.email.trim(),
+    nickname: userDraft.nickname.trim(),
+    password: userDraft.password,
+    role: userDraft.role,
+    status: userDraft.status
+  };
+  if (userDraft.id) {
+    await api(`/auth/users/${userDraft.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ nickname: payload.nickname, role: payload.role, status: payload.status })
+    });
+    if (payload.password) {
+      await api(`/auth/users/${userDraft.id}/reset-password`, {
+        method: 'POST',
+        body: JSON.stringify({ password: payload.password })
+      });
+    }
+    showToast('用户已更新');
+  } else {
+    await api('/auth/users', { method: 'POST', body: JSON.stringify(payload) });
+    showToast('用户已新增');
+  }
+  await loadUsers();
+  if (!userDraft.id) {
+    pages.users = Math.max(1, Math.ceil(users.value.length / pageSize));
+  }
+  newUser();
+}
+
+async function toggleUserStatus(user) {
+  const nextStatus = user.status === 'NORMAL' ? 'DISABLED' : 'NORMAL';
+  await api(`/auth/users/${user.id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ nickname: user.name, role: user.role, status: nextStatus })
+  });
+  await loadUsers();
+  showToast(nextStatus === 'NORMAL' ? '用户已启用' : '用户已停用');
 }
 
 function changePage(key, nextPage) {
@@ -374,6 +436,11 @@ newProduct();
                 </tr>
               </tbody>
             </table>
+            <div class="pager">
+              <button type="button" :disabled="userPage.currentPage === 1" @click="changePage('users', userPage.currentPage - 1)">上一页</button>
+              <span>第 {{ userPage.currentPage }} / {{ userPage.totalPages }} 页</span>
+              <button type="button" :disabled="userPage.currentPage === userPage.totalPages" @click="changePage('users', userPage.currentPage + 1)">下一页</button>
+            </div>
           </div>
           <div class="workspace-block">
             <div class="section-title"><h2>待处理事项</h2></div>
@@ -463,16 +530,34 @@ newProduct();
       </template>
 
       <template v-else-if="activeMenu === 'users'">
-        <section class="workspace-block">
-          <div class="section-title"><h2>用户列表</h2><span>{{ users.length }} 条记录</span></div>
-          <table>
-            <thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>订单数</th><th>状态</th></tr></thead>
-            <tbody>
-              <tr v-for="user in userPage.items" :key="user.id">
-                <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ label(user.role) }}</td><td>{{ userOrderCount(user.id) }}</td><td><span class="status" :data-status="user.status">{{ label(user.status) }}</span></td>
-              </tr>
-            </tbody>
-          </table>
+        <section class="toolbar">
+          <button type="button" @click="newUser">新增用户</button>
+        </section>
+        <section class="dashboard-grid">
+          <div class="workspace-block">
+            <div class="section-title"><h2>用户列表</h2><span>{{ users.length }} 条记录</span></div>
+            <table>
+              <thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>订单数</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="user in userPage.items" :key="user.id">
+                  <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ label(user.role) }}</td><td>{{ userOrderCount(user.id) }}</td><td><span class="status" :data-status="user.status">{{ label(user.status) }}</span></td>
+                  <td class="table-actions">
+                    <button type="button" @click="editUser(user)">编辑</button>
+                    <button type="button" :disabled="user.id === currentAdmin.userId" @click="toggleUserStatus(user)">{{ user.id === currentAdmin.userId ? '当前账号' : user.status === 'NORMAL' ? '停用' : '启用' }}</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <form class="workspace-block form-panel" @submit.prevent="saveUser">
+            <div class="section-title"><h2>{{ userDraft.id ? '编辑用户' : '新增用户' }}</h2></div>
+            <label>昵称<input v-model="userDraft.nickname" required /></label>
+            <label>邮箱<input v-model="userDraft.email" :disabled="Boolean(userDraft.id)" required type="email" /></label>
+            <label>角色<select v-model="userDraft.role"><option value="CUSTOMER">普通用户</option><option value="ADMIN">管理员</option></select></label>
+            <label>状态<select v-model="userDraft.status"><option value="NORMAL">正常</option><option value="DISABLED">已停用</option></select></label>
+            <label>{{ userDraft.id ? '重置密码' : '初始密码' }}<input v-model="userDraft.password" :required="!userDraft.id" minlength="6" type="password" /></label>
+            <div class="form-actions"><button type="submit">{{ userDraft.id ? '保存用户' : '创建用户' }}</button></div>
+          </form>
         </section>
       </template>
 

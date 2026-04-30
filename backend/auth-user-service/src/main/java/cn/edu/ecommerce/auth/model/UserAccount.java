@@ -8,6 +8,7 @@ public record UserAccount(
         String nickname,
         String passwordHash,
         String role,
+        String status,
         Instant createdAt
 ) {
 }

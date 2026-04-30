@@ -11,20 +11,22 @@ CREATE TABLE IF NOT EXISTS user_account (
     nickname VARCHAR(80) NOT NULL,
     password_hash VARCHAR(120) NOT NULL,
     role_code VARCHAR(40) NOT NULL,
+    status_code VARCHAR(30) NOT NULL DEFAULT 'NORMAL',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
-INSERT INTO user_account (id, email, nickname, password_hash, role_code)
+INSERT INTO user_account (id, email, nickname, password_hash, role_code, status_code)
 VALUES
-    (1, 'alice@example.com', 'Alice', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER'),
-    (2, 'ming@example.com', 'Ming', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER'),
-    (3, 'admin@example.com', 'Admin', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'ADMIN')
+    (1, 'alice@example.com', 'Alice', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER', 'NORMAL'),
+    (2, 'ming@example.com', 'Ming', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER', 'NORMAL'),
+    (3, 'admin@example.com', 'Admin', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'ADMIN', 'NORMAL')
 ON DUPLICATE KEY UPDATE
     nickname = VALUES(nickname),
     password_hash = VALUES(password_hash),
     role_code = VALUES(role_code),
+    status_code = VALUES(status_code),
     deleted = 0;
 
 USE product_db;

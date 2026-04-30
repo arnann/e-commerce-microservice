@@ -42,7 +42,8 @@ const activeProduct = ref(null);
 const loading = ref(false);
 const toast = ref('');
 const currentUser = ref(null);
-const loginForm = reactive({ email: 'alice@example.com', password: 'demo123' });
+const authMode = ref('login');
+const loginForm = reactive({ email: 'alice@example.com', nickname: '', password: 'demo123' });
 
 const categoryNames = computed(() => Object.fromEntries(categories.value.map((category) => [category.id, category.name])));
 const visibleProducts = computed(() => filterProducts(products.value, keyword.value, sort.value));
@@ -72,11 +73,12 @@ async function api(path, options) {
 async function login() {
   loading.value = true;
   try {
-    currentUser.value = await api('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email: loginForm.email.trim(), password: loginForm.password })
-    });
-    showToast(`${currentUser.value.nickname}，欢迎回来`);
+    const path = authMode.value === 'register' ? '/auth/register' : '/auth/login';
+    const payload = authMode.value === 'register'
+      ? { email: loginForm.email.trim(), nickname: loginForm.nickname.trim(), password: loginForm.password }
+      : { email: loginForm.email.trim(), password: loginForm.password };
+    currentUser.value = await api(path, { method: 'POST', body: JSON.stringify(payload) });
+    showToast(authMode.value === 'register' ? `${currentUser.value.nickname}，注册成功` : `${currentUser.value.nickname}，欢迎回来`);
     await refreshAll();
   } catch (error) {
     showToast(error.message);
@@ -96,6 +98,20 @@ function logout() {
   activeProduct.value = null;
   activeTab.value = 'overview';
   showToast('已退出登录');
+}
+
+function switchAuthMode(nextMode) {
+  authMode.value = nextMode;
+  toast.value = '';
+  if (nextMode === 'register') {
+    loginForm.email = '';
+    loginForm.nickname = '';
+    loginForm.password = '';
+  } else {
+    loginForm.email = 'alice@example.com';
+    loginForm.nickname = '';
+    loginForm.password = 'demo123';
+  }
 }
 
 async function refreshAll() {
@@ -205,12 +221,18 @@ function showToast(message) {
 <template>
   <main v-if="!currentUser" class="auth-screen">
     <form class="auth-panel" @submit.prevent="login">
-      <p>商城登录</p>
+      <p>{{ authMode === 'register' ? '创建商城账号' : '商城登录' }}</p>
       <h1>EC Shop</h1>
+      <div class="auth-tabs" role="tablist" aria-label="登录方式">
+        <button type="button" :class="{ active: authMode === 'login' }" @click="switchAuthMode('login')">登录</button>
+        <button type="button" :class="{ active: authMode === 'register' }" @click="switchAuthMode('register')">注册</button>
+      </div>
       <label>邮箱<input v-model="loginForm.email" autocomplete="username" required /></label>
+      <label v-if="authMode === 'register'">昵称<input v-model="loginForm.nickname" autocomplete="nickname" required /></label>
       <label>密码<input v-model="loginForm.password" autocomplete="current-password" required type="password" /></label>
-      <button type="submit" :disabled="loading">{{ loading ? '登录中' : '登录' }}</button>
-      <span>演示账号：alice@example.com / demo123</span>
+      <button type="submit" :disabled="loading">{{ loading ? '处理中' : authMode === 'register' ? '注册并进入商城' : '登录' }}</button>
+      <span v-if="authMode === 'login'">演示账号：alice@example.com / demo123</span>
+      <span v-else>密码至少 6 位，注册成功后自动登录</span>
       <p v-if="toast" class="toast" role="status">{{ toast }}</p>
     </form>
   </main>
