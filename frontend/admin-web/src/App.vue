@@ -65,6 +65,7 @@ const alerts = computed(() => stockAlerts(products.value, 5));
 const paidRevenue = computed(() => stats.value.revenue);
 const onlineProducts = computed(() => products.value.filter((product) => product.status === 'ON_SALE').length);
 const activeTitle = computed(() => menus.find((menu) => menu.key === activeMenu.value)?.label ?? '控制台');
+const usersById = computed(() => Object.fromEntries(users.value.map((user) => [user.id, user])));
 const filteredProducts = computed(() => {
   const text = keyword.value.trim().toLowerCase();
   if (!text) {
@@ -172,7 +173,6 @@ async function loadOrders() {
   const data = await api('/trade/orders');
   orders.value = data.map((order) => ({
     ...order,
-    user: `用户 ${order.userId}`,
     phone: '-',
     payment: order.status === 'PENDING_PAYMENT' ? 'UNPAID' : 'MOCK_PAY',
     totalAmount: Number(order.totalAmount),
@@ -187,8 +187,7 @@ async function loadUsers() {
     name: user.nickname,
     email: user.email,
     role: user.role,
-    status: 'NORMAL',
-    orders: orders.value.filter((order) => order.userId === user.id).length
+    status: 'NORMAL'
   }));
 }
 
@@ -198,7 +197,6 @@ async function loadNotices() {
     ...notice,
     status: notice.published ? 'PUBLISHED' : 'DRAFT',
     target: '全部用户',
-    publisher: notice.publisherId ? `用户 ${notice.publisherId}` : 'System',
     createdAt: new Date(notice.createdAt).toLocaleString()
   }));
 }
@@ -300,6 +298,17 @@ function label(value) {
   return labels[value] ?? value;
 }
 
+function displayUser(userId) {
+  if (!userId) {
+    return '系统';
+  }
+  return usersById.value[userId]?.name ?? `未知用户 #${userId}`;
+}
+
+function userOrderCount(userId) {
+  return orders.value.filter((order) => order.userId === userId).length;
+}
+
 newProduct();
 </script>
 
@@ -361,7 +370,7 @@ newProduct();
               <thead><tr><th>订单号</th><th>用户</th><th>金额</th><th>状态</th></tr></thead>
               <tbody>
                 <tr v-for="order in orders.slice(0, 5)" :key="order.id">
-                  <td>#{{ order.id }}</td><td>{{ order.user }}</td><td>¥{{ order.totalAmount }}</td><td><span class="status" :data-status="order.status">{{ label(order.status) }}</span></td>
+                  <td>#{{ order.id }}</td><td>{{ displayUser(order.userId) }}</td><td>¥{{ order.totalAmount }}</td><td><span class="status" :data-status="order.status">{{ label(order.status) }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -443,7 +452,7 @@ newProduct();
             <thead><tr><th>订单号</th><th>用户</th><th>商品</th><th>金额</th><th>支付</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
             <tbody>
               <tr v-for="order in orderPage.items" :key="order.id">
-                <td>#{{ order.id }}</td><td>{{ order.user }}</td><td>{{ order.items.map((item) => item.productName).join('、') }}</td><td>¥{{ order.totalAmount }}</td>
+                <td>#{{ order.id }}</td><td>{{ displayUser(order.userId) }}</td><td>{{ order.items.map((item) => item.productName).join('、') }}</td><td>¥{{ order.totalAmount }}</td>
                 <td>{{ label(order.payment) }}</td><td><span class="status" :data-status="order.status">{{ label(order.status) }}</span></td><td>{{ order.createdAt }}</td>
                 <td class="table-actions"><button type="button" :disabled="order.status !== 'PAID'" @click="shipOrder(order)">发货</button></td>
               </tr>
@@ -460,7 +469,7 @@ newProduct();
             <thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>订单数</th><th>状态</th></tr></thead>
             <tbody>
               <tr v-for="user in userPage.items" :key="user.id">
-                <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ label(user.role) }}</td><td>{{ user.orders }}</td><td><span class="status" :data-status="user.status">{{ label(user.status) }}</span></td>
+                <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ label(user.role) }}</td><td>{{ userOrderCount(user.id) }}</td><td><span class="status" :data-status="user.status">{{ label(user.status) }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -475,7 +484,7 @@ newProduct();
               <thead><tr><th>标题</th><th>范围</th><th>发布人</th><th>状态</th><th>时间</th></tr></thead>
               <tbody>
                 <tr v-for="notice in noticePage.items" :key="notice.id">
-                  <td>{{ notice.title }}</td><td>{{ notice.target }}</td><td>{{ notice.publisher }}</td><td><span class="status" :data-status="notice.status">{{ label(notice.status) }}</span></td><td>{{ notice.createdAt }}</td>
+                  <td>{{ notice.title }}</td><td>{{ notice.target }}</td><td>{{ displayUser(notice.publisherId) }}</td><td><span class="status" :data-status="notice.status">{{ label(notice.status) }}</span></td><td>{{ notice.createdAt }}</td>
                 </tr>
               </tbody>
             </table>
