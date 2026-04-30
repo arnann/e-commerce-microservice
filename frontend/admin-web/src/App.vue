@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { orderStats, paginate, stockAlerts } from './domain/operations.js';
 
 const API_BASE = '/api';
@@ -20,6 +20,25 @@ const serviceChecks = [
   { name: 'trade-service', url: '/trade/orders', port: 8103 },
   { name: 'message-service', url: '/messages/notices', port: 8105 }
 ];
+const labels = {
+  ALL: '全部状态',
+  PENDING_PAYMENT: '待支付',
+  PAID: '已支付',
+  SHIPPED: '已发货',
+  CANCELLED: '已取消',
+  UNPAID: '未支付',
+  MOCK_PAY: '模拟支付',
+  DRAFT: '草稿',
+  ON_SALE: '已上架',
+  OFF_SALE: '已下架',
+  ENABLED: '已启用',
+  NORMAL: '正常',
+  PUBLISHED: '已发布',
+  ADMIN: '管理员',
+  CUSTOMER: '普通用户',
+  UP: '正常',
+  DOWN: '异常'
+};
 
 const activeMenu = ref('overview');
 const keyword = ref('');
@@ -35,6 +54,8 @@ const services = ref([]);
 const productDraft = reactive(emptyProduct());
 const categoryDraft = reactive({ name: '' });
 const noticeDraft = reactive({ title: '', content: '' });
+const loginForm = reactive({ email: 'admin@example.com', password: 'demo123' });
+const currentAdmin = ref(null);
 const pages = reactive({ products: 1, categories: 1, orders: 1, users: 1, notices: 1 });
 let toastTimer;
 
@@ -65,11 +86,12 @@ watch(orderStatus, () => {
   pages.orders = 1;
 });
 
-onMounted(refreshAll);
-
 async function api(path, options) {
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(currentAdmin.value?.token ? { Authorization: `Bearer ${currentAdmin.value.token}` } : {})
+    },
     ...options
   });
   const payload = await response.json();
@@ -79,11 +101,46 @@ async function api(path, options) {
   return payload.data;
 }
 
+async function login() {
+  loading.value = true;
+  try {
+    const result = await api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: loginForm.email.trim(), password: loginForm.password })
+    });
+    if (result.role !== 'ADMIN') {
+      throw new Error('当前账号不是管理员');
+    }
+    currentAdmin.value = result;
+    showToast(`${result.nickname}，欢迎回来`);
+    await refreshAll();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    loading.value = false;
+  }
+}
+
+function logout() {
+  currentAdmin.value = null;
+  products.value = [];
+  categories.value = [];
+  orders.value = [];
+  users.value = [];
+  notices.value = [];
+  services.value = [];
+  activeMenu.value = 'overview';
+  showToast('已退出登录');
+}
+
 async function refreshAll() {
+  if (!currentAdmin.value) {
+    return;
+  }
   loading.value = true;
   try {
     await Promise.all([loadProducts(), loadOrders(), loadUsers(), loadNotices(), refreshServices()]);
-    showToast('已从数据库刷新');
+    showToast('已刷新');
   } catch (error) {
     showToast(error.message);
   } finally {
@@ -192,7 +249,7 @@ async function saveProduct() {
   keyword.value = savedName;
   pages.products = 1;
   newProduct();
-  showToast('商品已保存到数据库');
+  showToast('商品已保存');
 }
 
 async function saveCategory() {
@@ -203,7 +260,7 @@ async function saveCategory() {
   await api('/products/categories', { method: 'POST', body: JSON.stringify({ name: categoryDraft.name.trim() }) });
   categoryDraft.name = '';
   await loadProducts();
-  showToast('分类已保存到数据库');
+  showToast('分类已保存');
 }
 
 async function shipOrder(order) {
@@ -224,7 +281,7 @@ async function publishNotice() {
   noticeDraft.title = '';
   noticeDraft.content = '';
   await loadNotices();
-  showToast('公告已发布到数据库');
+  showToast('公告已发布');
 }
 
 function changePage(key, nextPage) {
@@ -239,11 +296,27 @@ function showToast(message) {
   }, 2400);
 }
 
+function label(value) {
+  return labels[value] ?? value;
+}
+
 newProduct();
 </script>
 
 <template>
-  <main class="admin-shell">
+  <main v-if="!currentAdmin" class="auth-screen">
+    <form class="auth-panel" @submit.prevent="login">
+      <p>管理后台登录</p>
+      <h1>EC Admin</h1>
+      <label>邮箱<input v-model="loginForm.email" autocomplete="username" required /></label>
+      <label>密码<input v-model="loginForm.password" autocomplete="current-password" required type="password" /></label>
+      <button type="submit" :disabled="loading">{{ loading ? '登录中' : '登录' }}</button>
+      <span>演示账号：admin@example.com / demo123</span>
+      <p v-if="toast" class="toast" role="status">{{ toast }}</p>
+    </form>
+  </main>
+
+  <main v-else class="admin-shell">
     <aside class="sidebar">
       <strong>EC Admin</strong>
       <nav>
@@ -262,12 +335,13 @@ newProduct();
     <section class="content">
       <header class="topbar">
         <div>
-          <p>{{ loading ? '同步中' : '数据库实时数据' }}</p>
+          <p>{{ loading ? '同步中' : `当前管理员：${currentAdmin.nickname}` }}</p>
           <h1>{{ activeTitle }}</h1>
         </div>
         <div class="top-actions">
           <button type="button" @click="refreshAll">刷新</button>
           <a href="http://localhost:8848/nacos" target="_blank" rel="noreferrer">Nacos</a>
+          <button type="button" @click="logout">退出</button>
         </div>
       </header>
 
@@ -287,7 +361,7 @@ newProduct();
               <thead><tr><th>订单号</th><th>用户</th><th>金额</th><th>状态</th></tr></thead>
               <tbody>
                 <tr v-for="order in orders.slice(0, 5)" :key="order.id">
-                  <td>#{{ order.id }}</td><td>{{ order.user }}</td><td>¥{{ order.totalAmount }}</td><td><span class="status" :data-status="order.status">{{ order.status }}</span></td>
+                  <td>#{{ order.id }}</td><td>{{ order.user }}</td><td>¥{{ order.totalAmount }}</td><td><span class="status" :data-status="order.status">{{ label(order.status) }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -314,7 +388,7 @@ newProduct();
               <tbody>
                 <tr v-for="product in productPage.items" :key="product.id">
                   <td>{{ product.sku }}</td><td>{{ product.name }}</td><td>{{ product.category }}</td><td>¥{{ product.price }}</td>
-                  <td :class="{ danger: product.stock <= 5 }">{{ product.stock }}</td><td><span class="status" :data-status="product.status">{{ product.status }}</span></td>
+                  <td :class="{ danger: product.stock <= 5 }">{{ product.stock }}</td><td><span class="status" :data-status="product.status">{{ label(product.status) }}</span></td>
                   <td class="table-actions"><button type="button" @click="editProduct(product)">编辑</button></td>
                 </tr>
               </tbody>
@@ -332,8 +406,8 @@ newProduct();
             <label>分类<select v-model.number="productDraft.categoryId"><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
             <label>价格<input v-model.number="productDraft.price" min="0" type="number" /></label>
             <label>库存<input v-model.number="productDraft.stock" min="0" type="number" /></label>
-            <label>状态<select v-model="productDraft.status"><option value="DRAFT">DRAFT</option><option value="ON_SALE">ON_SALE</option><option value="OFF_SALE">OFF_SALE</option></select></label>
-            <div class="form-actions"><button type="submit">保存到数据库</button></div>
+            <label>状态<select v-model="productDraft.status"><option value="DRAFT">草稿</option><option value="ON_SALE">已上架</option><option value="OFF_SALE">已下架</option></select></label>
+            <div class="form-actions"><button type="submit">保存商品</button></div>
           </form>
         </section>
       </template>
@@ -346,7 +420,7 @@ newProduct();
               <thead><tr><th>ID</th><th>分类名称</th><th>商品数</th><th>排序</th><th>状态</th></tr></thead>
               <tbody>
                 <tr v-for="category in categoryPage.items" :key="category.id">
-                  <td>{{ category.id }}</td><td>{{ category.name }}</td><td>{{ category.productCount }}</td><td>{{ category.sort }}</td><td><span class="status" :data-status="category.status">{{ category.status }}</span></td>
+                  <td>{{ category.id }}</td><td>{{ category.name }}</td><td>{{ category.productCount }}</td><td>{{ category.sort }}</td><td><span class="status" :data-status="category.status">{{ label(category.status) }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -354,7 +428,7 @@ newProduct();
           <form class="workspace-block form-panel" @submit.prevent="saveCategory">
             <div class="section-title"><h2>新增分类</h2></div>
             <label>分类名称<input v-model="categoryDraft.name" required /></label>
-            <div class="form-actions"><button type="submit">保存到数据库</button></div>
+            <div class="form-actions"><button type="submit">保存分类</button></div>
           </form>
         </section>
       </template>
@@ -370,7 +444,7 @@ newProduct();
             <tbody>
               <tr v-for="order in orderPage.items" :key="order.id">
                 <td>#{{ order.id }}</td><td>{{ order.user }}</td><td>{{ order.items.map((item) => item.productName).join('、') }}</td><td>¥{{ order.totalAmount }}</td>
-                <td>{{ order.payment }}</td><td><span class="status" :data-status="order.status">{{ order.status }}</span></td><td>{{ order.createdAt }}</td>
+                <td>{{ label(order.payment) }}</td><td><span class="status" :data-status="order.status">{{ label(order.status) }}</span></td><td>{{ order.createdAt }}</td>
                 <td class="table-actions"><button type="button" :disabled="order.status !== 'PAID'" @click="shipOrder(order)">发货</button></td>
               </tr>
             </tbody>
@@ -386,7 +460,7 @@ newProduct();
             <thead><tr><th>ID</th><th>昵称</th><th>邮箱</th><th>角色</th><th>订单数</th><th>状态</th></tr></thead>
             <tbody>
               <tr v-for="user in userPage.items" :key="user.id">
-                <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ user.role }}</td><td>{{ user.orders }}</td><td><span class="status" :data-status="user.status">{{ user.status }}</span></td>
+                <td>{{ user.id }}</td><td>{{ user.name }}</td><td>{{ user.email }}</td><td>{{ label(user.role) }}</td><td>{{ user.orders }}</td><td><span class="status" :data-status="user.status">{{ label(user.status) }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -401,7 +475,7 @@ newProduct();
               <thead><tr><th>标题</th><th>范围</th><th>发布人</th><th>状态</th><th>时间</th></tr></thead>
               <tbody>
                 <tr v-for="notice in noticePage.items" :key="notice.id">
-                  <td>{{ notice.title }}</td><td>{{ notice.target }}</td><td>{{ notice.publisher }}</td><td><span class="status" :data-status="notice.status">{{ notice.status }}</span></td><td>{{ notice.createdAt }}</td>
+                  <td>{{ notice.title }}</td><td>{{ notice.target }}</td><td>{{ notice.publisher }}</td><td><span class="status" :data-status="notice.status">{{ label(notice.status) }}</span></td><td>{{ notice.createdAt }}</td>
                 </tr>
               </tbody>
             </table>
@@ -410,7 +484,7 @@ newProduct();
             <div class="section-title"><h2>发布公告</h2></div>
             <label>标题<input v-model="noticeDraft.title" required /></label>
             <label>内容<textarea v-model="noticeDraft.content" rows="6" required></textarea></label>
-            <div class="form-actions"><button type="submit">发布到数据库</button></div>
+            <div class="form-actions"><button type="submit">发布公告</button></div>
           </form>
         </section>
       </template>
@@ -422,7 +496,7 @@ newProduct();
             <thead><tr><th>服务</th><th>端口</th><th>状态</th><th>延迟</th><th>入口</th></tr></thead>
             <tbody>
               <tr v-for="service in services" :key="service.name">
-                <td>{{ service.name }}</td><td>{{ service.port }}</td><td><span class="status" :data-status="service.status">{{ service.status }}</span></td><td>{{ service.latency }}</td><td>{{ service.url }}</td>
+                <td>{{ service.name }}</td><td>{{ service.port }}</td><td><span class="status" :data-status="service.status">{{ label(service.status) }}</span></td><td>{{ service.latency }}</td><td>{{ service.url }}</td>
               </tr>
             </tbody>
           </table>

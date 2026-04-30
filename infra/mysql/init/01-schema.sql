@@ -18,11 +18,12 @@ CREATE TABLE IF NOT EXISTS user_account (
 
 INSERT INTO user_account (id, email, nickname, password_hash, role_code)
 VALUES
-    (1, 'alice@example.com', 'Alice', '$2a$10$Yw8JHn7Qw6dQw6dQw6dQwOMb.JoG4mR5mYdX3zQXKJrJwUaH9rWzK', 'CUSTOMER'),
-    (2, 'ming@example.com', 'Ming', '$2a$10$Yw8JHn7Qw6dQw6dQw6dQwOMb.JoG4mR5mYdX3zQXKJrJwUaH9rWzK', 'CUSTOMER'),
-    (3, 'admin@example.com', 'Admin', '$2a$10$Yw8JHn7Qw6dQw6dQw6dQwOMb.JoG4mR5mYdX3zQXKJrJwUaH9rWzK', 'ADMIN')
+    (1, 'alice@example.com', 'Alice', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER'),
+    (2, 'ming@example.com', 'Ming', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'CUSTOMER'),
+    (3, 'admin@example.com', 'Admin', '$2a$10$GiSm3ckUDsVPvcjULVXSiOfYu3z11EnKch.sXs6hF7dAdKFAhQvt2', 'ADMIN')
 ON DUPLICATE KEY UPDATE
     nickname = VALUES(nickname),
+    password_hash = VALUES(password_hash),
     role_code = VALUES(role_code),
     deleted = 0;
 

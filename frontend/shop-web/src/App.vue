@@ -1,9 +1,8 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { cartTotal, filterProducts, recommendProducts } from './domain/catalog.js';
 
 const API_BASE = '/api';
-const userId = 1;
 const tabs = [
   { key: 'overview', label: '总览' },
   { key: 'products', label: '商品' },
@@ -18,6 +17,17 @@ const productImages = {
   104: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=80',
   105: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=900&q=80'
 };
+const productStatusText = {
+  DRAFT: '草稿',
+  ON_SALE: '已上架',
+  OFF_SALE: '已下架'
+};
+const orderStatusText = {
+  PENDING_PAYMENT: '待支付',
+  PAID: '已支付',
+  SHIPPED: '已发货',
+  CANCELLED: '已取消'
+};
 
 const products = ref([]);
 const categories = ref([]);
@@ -31,6 +41,8 @@ const activeTab = ref('overview');
 const activeProduct = ref(null);
 const loading = ref(false);
 const toast = ref('');
+const currentUser = ref(null);
+const loginForm = reactive({ email: 'alice@example.com', password: 'demo123' });
 
 const categoryNames = computed(() => Object.fromEntries(categories.value.map((category) => [category.id, category.name])));
 const visibleProducts = computed(() => filterProducts(products.value, keyword.value, sort.value));
@@ -40,12 +52,14 @@ const stockTotal = computed(() => products.value.reduce((total, product) => tota
 const productTotal = computed(() => products.value.length);
 const unreadTotal = computed(() => messages.value.filter((message) => !message.read).length);
 const selectedCategoryName = computed(() => activeProduct.value ? categoryNames.value[activeProduct.value.categoryId] ?? activeProduct.value.categoryId : '-');
-
-onMounted(refreshAll);
+const currentUserId = computed(() => currentUser.value?.userId);
 
 async function api(path, options) {
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(currentUser.value?.token ? { Authorization: `Bearer ${currentUser.value.token}` } : {})
+    },
     ...options
   });
   const payload = await response.json();
@@ -55,25 +69,57 @@ async function api(path, options) {
   return payload.data;
 }
 
+async function login() {
+  loading.value = true;
+  try {
+    currentUser.value = await api('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email: loginForm.email.trim(), password: loginForm.password })
+    });
+    showToast(`${currentUser.value.nickname}，欢迎回来`);
+    await refreshAll();
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    loading.value = false;
+  }
+}
+
+function logout() {
+  currentUser.value = null;
+  products.value = [];
+  categories.value = [];
+  cartItems.value = [];
+  orders.value = [];
+  notices.value = [];
+  messages.value = [];
+  activeProduct.value = null;
+  activeTab.value = 'overview';
+  showToast('已退出登录');
+}
+
 async function refreshAll() {
+  if (!currentUserId.value) {
+    return;
+  }
   loading.value = true;
   try {
     const [categoryData, productData, cartData, orderData, noticeData, messageData] = await Promise.all([
       api('/products/categories'),
       api('/products'),
-      api(`/trade/cart/${userId}`),
+      api(`/trade/cart/${currentUserId.value}`),
       api('/trade/orders'),
       api('/messages/notices'),
-      api(`/messages/users/${userId}`)
+      api(`/messages/users/${currentUserId.value}`)
     ]);
     categories.value = categoryData;
     products.value = productData.map(normalizeProduct);
     cartItems.value = cartData.items.map(normalizeCartItem);
-    orders.value = orderData.filter((order) => order.userId === userId);
+    orders.value = orderData.filter((order) => order.userId === currentUserId.value);
     notices.value = noticeData;
     messages.value = messageData;
     activeProduct.value = products.value.find((product) => product.status === 'ON_SALE') ?? products.value[0] ?? null;
-    showToast('数据已从数据库同步');
+    showToast('已刷新');
   } catch (error) {
     showToast(error.message);
   } finally {
@@ -106,9 +152,9 @@ async function addToCart(product) {
   }
   await api('/trade/cart/items', {
     method: 'POST',
-    body: JSON.stringify({ userId, productId: product.id, quantity: 1 })
+    body: JSON.stringify({ userId: currentUserId.value, productId: product.id, quantity: 1 })
   });
-  const cart = await api(`/trade/cart/${userId}`);
+  const cart = await api(`/trade/cart/${currentUserId.value}`);
   cartItems.value = cart.items.map(normalizeCartItem);
   activeTab.value = 'cart';
   showToast(`${product.name} 已加入购物车`);
@@ -122,7 +168,7 @@ async function createOrderFromCart() {
   const productQuantities = Object.fromEntries(cartItems.value.map((item) => [item.id, item.quantity]));
   const order = await api('/trade/orders', {
     method: 'POST',
-    body: JSON.stringify({ userId, productQuantities })
+    body: JSON.stringify({ userId: currentUserId.value, productQuantities })
   });
   orders.value.unshift(order);
   activeTab.value = 'orders';
@@ -139,8 +185,12 @@ async function payOrder(order) {
 }
 
 async function markRead(message) {
-  await api(`/messages/users/${userId}/${message.id}/read`, { method: 'POST' });
+  await api(`/messages/users/${currentUserId.value}/${message.id}/read`, { method: 'POST' });
   message.read = true;
+}
+
+function statusText(value) {
+  return productStatusText[value] ?? orderStatusText[value] ?? value;
 }
 
 function showToast(message) {
@@ -153,7 +203,19 @@ function showToast(message) {
 </script>
 
 <template>
-  <main class="shop-shell">
+  <main v-if="!currentUser" class="auth-screen">
+    <form class="auth-panel" @submit.prevent="login">
+      <p>商城登录</p>
+      <h1>EC Shop</h1>
+      <label>邮箱<input v-model="loginForm.email" autocomplete="username" required /></label>
+      <label>密码<input v-model="loginForm.password" autocomplete="current-password" required type="password" /></label>
+      <button type="submit" :disabled="loading">{{ loading ? '登录中' : '登录' }}</button>
+      <span>演示账号：alice@example.com / demo123</span>
+      <p v-if="toast" class="toast" role="status">{{ toast }}</p>
+    </form>
+  </main>
+
+  <main v-else class="shop-shell">
     <aside class="sidebar">
       <strong>EC Shop</strong>
       <nav>
@@ -172,10 +234,13 @@ function showToast(message) {
     <section class="content">
       <header class="topbar">
         <div>
-          <p>{{ loading ? '同步中' : '数据库实时数据' }}</p>
+          <p>{{ loading ? '同步中' : `当前用户：${currentUser.nickname}` }}</p>
           <h1>轻量电商商城端</h1>
         </div>
-        <button type="button" @click="refreshAll">同步数据</button>
+        <div class="top-actions">
+          <button type="button" @click="refreshAll">刷新</button>
+          <button type="button" @click="logout">退出</button>
+        </div>
       </header>
 
       <p v-if="toast" class="toast" role="status">{{ toast }}</p>
@@ -269,7 +334,7 @@ function showToast(message) {
                   <td>{{ categoryNames[product.categoryId] ?? product.categoryId }}</td>
                   <td>¥{{ product.price }}</td>
                   <td>{{ product.stock }}</td>
-                  <td>{{ product.status }}</td>
+                  <td><span class="status" :data-status="product.status">{{ statusText(product.status) }}</span></td>
                   <td>
                     <button type="button" @click.stop="addToCart(product)">选择</button>
                   </td>
@@ -343,7 +408,7 @@ function showToast(message) {
                 <td>#{{ order.id }}</td>
                 <td>{{ order.items.map((item) => item.productName).join('、') }}</td>
                 <td>¥{{ Number(order.totalAmount) }}</td>
-                <td>{{ order.status }}</td>
+                <td><span class="status" :data-status="order.status">{{ statusText(order.status) }}</span></td>
                 <td>
                   <button type="button" :disabled="order.status !== 'PENDING_PAYMENT'" @click="payOrder(order)">支付</button>
                 </td>
