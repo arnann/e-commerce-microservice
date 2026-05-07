@@ -23,6 +23,11 @@ public class ProductController {
         this.productCatalogService = productCatalogService;
     }
 
+    @GetMapping("/health")
+    public ApiResponse<String> health() {
+        return ApiResponse.ok("product-service");
+    }
+
     @PostMapping("/categories")
     public ApiResponse<?> createCategory(@RequestBody CreateCategoryRequest request) {
         return ApiResponse.ok(productCatalogService.createCategory(request.name()));

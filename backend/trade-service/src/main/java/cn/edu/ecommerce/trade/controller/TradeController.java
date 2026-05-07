@@ -21,6 +21,11 @@ public class TradeController {
         this.tradeApplicationService = tradeApplicationService;
     }
 
+    @GetMapping("/health")
+    public ApiResponse<String> health() {
+        return ApiResponse.ok("trade-service");
+    }
+
     @PostMapping("/cart/items")
     public ApiResponse<?> addToCart(@RequestBody AddCartItemRequest request) {
         return ApiResponse.ok(tradeApplicationService.addToCart(request.userId(), request.productId(), request.quantity()));

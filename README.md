@@ -41,6 +41,8 @@
 docker compose up -d --build
 ```
 
+首次部署后不要立刻点登录，先等 `docker compose ps` 里核心服务进入 `healthy` 或 `running` 状态，通常需要 1-3 分钟，取决于机器性能和镜像拉取速度。
+
 首次构建会拉取 MySQL、Nacos、RocketMQ、Seata、Sentinel、JDK、Node、Nginx 等镜像，并编译多个后端服务和前端应用，耗时会比较久。后续只改某个服务时，建议只重建对应服务，例如：
 
 ```bash
@@ -65,13 +67,21 @@ wsl -u root -e sh -lc 'cd /path/to/e-commerce-microservice && docker compose up 
 
 ## 启动后入口
 
-- 商城用户端：`http://localhost:3000`
-- 管理后台：`http://localhost:3001`
-- API 网关：`http://localhost:8080`
+- 商城用户端（Docker 部署入口）：`http://localhost:3000`
+- 管理后台（Docker 部署入口）：`http://localhost:3001`
+- API 网关（只给接口调试用，不是页面入口）：`http://localhost:8080`
 - Nacos：`http://localhost:8848/nacos`
 - Sentinel：`http://localhost:8858`
 - Seata 控制台：`http://localhost:7091`
 - MySQL：`localhost:3306`
+
+端口对应关系：
+
+| 场景 | 商城端 | 管理端 | 说明 |
+| --- | --- | --- | --- |
+| Docker Compose 部署 | `3000` | `3001` | 浏览器访问这两个端口 |
+| Vite 本地开发 | `5175` | `5174` | 只在执行 `npm run dev` 时使用 |
+| API 网关 | `8080` | `8080` | 接口调试入口，不直接渲染前端页面 |
 
 ## 演示账号
 
@@ -95,6 +105,12 @@ demo123
 
 ```text
 infra/mysql/init/01-schema.sql
+```
+
+如果你已经遇到“页面能打开，但商品名 / 公告 / 站内消息中文乱码”，仓库里还提供了一个针对现有数据库的修复脚本：
+
+```text
+infra/mysql/repair-seed-data.sql
 ```
 
 `docker-compose.yml` 会把该目录挂载到 MySQL 官方镜像的初始化目录：
@@ -143,6 +159,13 @@ docker exec ecommerce-mysql mysql -uroot -proot123456 -e "ALTER TABLE auth_user_
 
 全新环境不需要手动执行这类 SQL，初始化脚本会自动建好。
 
+如果是历史库里已经出现中文乱码，不必先删库，可以执行修复脚本：
+
+```bash
+docker cp infra/mysql/repair-seed-data.sql ecommerce-mysql:/tmp/repair-seed-data.sql
+docker exec ecommerce-mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -proot123456 < /tmp/repair-seed-data.sql"
+```
+
 ## 验证服务是否启动成功
 
 查看容器状态：
@@ -151,7 +174,7 @@ docker exec ecommerce-mysql mysql -uroot -proot123456 -e "ALTER TABLE auth_user_
 docker compose ps
 ```
 
-所有核心服务应处于 `Up` 状态，尤其是：
+所有核心服务应处于 `Up` 状态；带健康检查的服务最好显示为 `healthy`，尤其是：
 
 - `ecommerce-mysql`
 - `ecommerce-nacos`
@@ -161,6 +184,7 @@ docker compose ps
 - `ecommerce-product`
 - `ecommerce-trade`
 - `ecommerce-message`
+- `ecommerce-search`
 - `ecommerce-shop-web`
 - `ecommerce-admin-web`
 
@@ -277,11 +301,33 @@ npm run dev -w admin-web
 
 ### 页面打开了但接口 502
 
-前端 Nginx 会代理 `/api` 到 `gateway-service:8080`。如果网关刚重启，稍等几秒刷新页面。仍不正常时检查：
+前端 Nginx 会代理 `/api` 到 `gateway-service:8080`。如果是首次部署，最常见原因是 `auth-user-service` 或 `gateway-service` 还没完全就绪，这时登录接口 `POST /api/auth/login` 会直接返回 `502 Bad Gateway`。
+
+先看容器是否健康：
 
 ```bash
-docker compose ps gateway-service
+docker compose ps
+```
+
+重点确认这些服务不是 `exited` / `unhealthy`：
+
+```bash
+docker compose ps mysql auth-user-service product-service trade-service message-service search-service gateway-service
+```
+
+再看日志：
+
+```bash
 docker logs ecommerce-gateway --tail 120
+docker logs ecommerce-auth-user --tail 120
+```
+
+如果是刚部署完，等待 `auth-user-service`、`gateway-service` 变成 `healthy` 后再刷新页面即可。
+
+如果服务已经退出，可以直接拉起关键链路：
+
+```bash
+docker compose up -d mysql auth-user-service product-service trade-service message-service search-service gateway-service shop-web admin-web
 ```
 
 ### 登录失败
@@ -296,6 +342,24 @@ curl http://localhost:8080/api/auth/health
 
 ```bash
 docker exec ecommerce-mysql mysql -uroot -proot123456 -e "SELECT id,email,nickname,role_code,status_code,deleted FROM auth_user_db.user_account ORDER BY id;"
+```
+
+### 页面中文乱码
+
+如果静态按钮文字正常，但商品、公告、消息文字是乱码，通常是历史数据库里的种子数据曾被错误编码导入。
+
+优先执行：
+
+```bash
+docker cp infra/mysql/repair-seed-data.sql ecommerce-mysql:/tmp/repair-seed-data.sql
+docker exec ecommerce-mysql sh -lc "mysql --default-character-set=utf8mb4 -uroot -proot123456 < /tmp/repair-seed-data.sql"
+```
+
+执行后刷新页面即可。如果这是全新测试环境，也可以直接清掉旧卷后重建：
+
+```bash
+docker compose down -v
+docker compose up -d --build
 ```
 
 ### 数据没有初始化

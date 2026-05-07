@@ -2,6 +2,7 @@ services:
   mysql:
     image: mysql:8.4
     container_name: ecommerce-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root123456
       MYSQL_DATABASE: ecommerce_bootstrap
@@ -11,16 +12,24 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./infra/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   redis:
     image: redis:7.4-alpine
     container_name: ecommerce-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
 
   nacos:
     image: nacos/nacos-server:v2.4.3
     container_name: ecommerce-nacos
+    restart: unless-stopped
     environment:
       MODE: standalone
       NACOS_AUTH_ENABLE: "false"
@@ -31,12 +40,14 @@ services:
   sentinel-dashboard:
     image: bladex/sentinel-dashboard:1.8.8
     container_name: ecommerce-sentinel
+    restart: unless-stopped
     ports:
       - "8858:8858"
 
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.2
     container_name: ecommerce-rocketmq-namesrv
+    restart: unless-stopped
     command: sh mqnamesrv
     ports:
       - "9876:9876"
@@ -44,6 +55,7 @@ services:
   rocketmq-broker:
     image: apache/rocketmq:5.3.2
     container_name: ecommerce-rocketmq-broker
+    restart: unless-stopped
     command: sh mqbroker -n rocketmq-namesrv:9876
     depends_on:
       - rocketmq-namesrv
@@ -53,6 +65,7 @@ services:
   seata-server:
     image: apache/seata-server:2.1.0
     container_name: ecommerce-seata
+    restart: unless-stopped
     environment:
       SEATA_IP: seata-server
     ports:
@@ -66,6 +79,7 @@ services:
       args:
         SERVICE_NAME: gateway-service
     container_name: ecommerce-gateway
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
@@ -76,10 +90,28 @@ services:
       SEARCH_SERVICE_URI: http://search-service:8104
       MESSAGE_SERVICE_URI: http://message-service:8105
     depends_on:
-      - nacos
-      - sentinel-dashboard
+      auth-user-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      trade-service:
+        condition: service_healthy
+      search-service:
+        condition: service_healthy
+      message-service:
+        condition: service_healthy
     ports:
       - "8080:8080"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://localhost:8080/api/auth/health > /dev/null && curl -fsS http://localhost:8080/api/products/health > /dev/null && curl -fsS http://localhost:8080/api/trade/health > /dev/null && curl -fsS http://localhost:8080/api/search/health > /dev/null && curl -fsS http://localhost:8080/api/messages/health > /dev/null"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   auth-user-service:
     build:
@@ -88,15 +120,26 @@ services:
       args:
         SERVICE_NAME: auth-user-service
     container_name: ecommerce-auth-user
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
     depends_on:
-      - nacos
-      - sentinel-dashboard
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+      sentinel-dashboard:
+        condition: service_started
     ports:
       - "8101:8101"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8101/auth/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   product-service:
     build:
@@ -105,6 +148,7 @@ services:
       args:
         SERVICE_NAME: product-service
     container_name: ecommerce-product
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
@@ -114,10 +158,22 @@ services:
       SEATA_TX_SERVICE_GROUP: default_tx_group
       SEATA_SERVICE_GROUP: default
     depends_on:
-      - nacos
-      - sentinel-dashboard
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+      sentinel-dashboard:
+        condition: service_started
+      seata-server:
+        condition: service_started
     ports:
       - "8102:8102"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8102/products/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   trade-service:
     build:
@@ -126,6 +182,7 @@ services:
       args:
         SERVICE_NAME: trade-service
     container_name: ecommerce-trade
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
@@ -137,11 +194,26 @@ services:
       SEATA_TX_SERVICE_GROUP: default_tx_group
       SEATA_SERVICE_GROUP: default
     depends_on:
-      - nacos
-      - sentinel-dashboard
-      - rocketmq-namesrv
+      mysql:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+      sentinel-dashboard:
+        condition: service_started
+      rocketmq-namesrv:
+        condition: service_started
+      seata-server:
+        condition: service_started
     ports:
       - "8103:8103"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8103/trade/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   search-service:
     build:
@@ -150,15 +222,24 @@ services:
       args:
         SERVICE_NAME: search-service
     container_name: ecommerce-search
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
     depends_on:
-      - nacos
-      - sentinel-dashboard
+      nacos:
+        condition: service_started
+      sentinel-dashboard:
+        condition: service_started
     ports:
       - "8104:8104"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8104/search/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   message-service:
     build:
@@ -167,17 +248,29 @@ services:
       args:
         SERVICE_NAME: message-service
     container_name: ecommerce-message
+    restart: unless-stopped
     environment:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
       ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
     depends_on:
-      - nacos
-      - sentinel-dashboard
-      - rocketmq-namesrv
+      mysql:
+        condition: service_healthy
+      nacos:
+        condition: service_started
+      sentinel-dashboard:
+        condition: service_started
+      rocketmq-namesrv:
+        condition: service_started
     ports:
       - "8105:8105"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8105/messages/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   shop-web:
     build:
@@ -186,8 +279,10 @@ services:
       args:
         APP_NAME: shop-web
     container_name: ecommerce-shop-web
+    restart: unless-stopped
     depends_on:
-      - gateway-service
+      gateway-service:
+        condition: service_healthy
     ports:
       - "3000:80"
 
@@ -198,8 +293,10 @@ services:
       args:
         APP_NAME: admin-web
     container_name: ecommerce-admin-web
+    restart: unless-stopped
     depends_on:
-      - gateway-service
+      gateway-service:
+        condition: service_healthy
     ports:
       - "3001:80"
 

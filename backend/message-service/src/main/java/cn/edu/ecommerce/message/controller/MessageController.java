@@ -20,6 +20,11 @@ public class MessageController {
         this.messageCenterService = messageCenterService;
     }
 
+    @GetMapping("/health")
+    public ApiResponse<String> health() {
+        return ApiResponse.ok("message-service");
+    }
+
     @PostMapping("/notices")
     public ApiResponse<?> publishNotice(@RequestBody PublishNoticeRequest request) {
         return ApiResponse.ok(messageCenterService.publishNotice(request.title(), request.content(), request.publisherId()));

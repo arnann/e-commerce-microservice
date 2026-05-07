@@ -19,6 +19,11 @@ public class SearchController {
         this.searchRecommendationService = searchRecommendationService;
     }
 
+    @GetMapping("/health")
+    public ApiResponse<String> health() {
+        return ApiResponse.ok("search-service");
+    }
+
     @PostMapping("/index")
     public ApiResponse<?> index(@RequestBody ProductDocument document) {
         searchRecommendationService.index(document);
