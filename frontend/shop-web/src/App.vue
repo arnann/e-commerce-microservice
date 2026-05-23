@@ -149,7 +149,7 @@ function normalizeProduct(product) {
     price: Number(product.price),
     sales: product.sales ?? 0,
     views: product.views ?? product.stock * 8,
-    image: productImages[product.id] ?? productImages[105]
+    image: product.imageUrl ?? productImages[product.id] ?? productImages[105]
   };
 }
 

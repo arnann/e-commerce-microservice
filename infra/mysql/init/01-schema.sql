@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS product_spu (
     category_id BIGINT NOT NULL,
     name VARCHAR(120) NOT NULL,
     description VARCHAR(500),
+    image_url VARCHAR(255),
     price DECIMAL(12, 2) NOT NULL,
     stock INT NOT NULL,
     status VARCHAR(30) NOT NULL,
@@ -77,17 +78,18 @@ ON DUPLICATE KEY UPDATE
     status = VALUES(status),
     deleted = 0;
 
-INSERT INTO product_spu (id, category_id, name, description, price, stock, status)
+INSERT INTO product_spu (id, category_id, name, description, image_url, price, stock, status)
 VALUES
-    (101, 10, '无线降噪耳机', '通勤、学习和运动都能稳定使用的蓝牙耳机。', 299.00, 36, 'ON_SALE'),
-    (102, 10, '机械键盘', '热插拔轴体，适合代码、论文和日常办公。', 399.00, 18, 'ON_SALE'),
-    (103, 11, '运动水杯', '大容量防漏杯，轻便耐用。', 59.00, 90, 'ON_SALE'),
-    (104, 12, '微服务实践手册', '覆盖注册发现、网关、限流、消息队列和部署。', 88.00, 42, 'ON_SALE'),
-    (105, 10, '无线鼠标', '轻量低延迟，适合办公和学习。', 129.00, 15, 'DRAFT')
+    (101, 10, '无线降噪耳机', '通勤、学习和运动都能稳定使用的蓝牙耳机。', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80', 299.00, 36, 'ON_SALE'),
+    (102, 10, '机械键盘', '热插拔轴体，适合代码、论文和日常办公。', 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80', 399.00, 18, 'ON_SALE'),
+    (103, 11, '运动水杯', '大容量防漏杯，轻便耐用。', 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=80', 59.00, 90, 'ON_SALE'),
+    (104, 12, '微服务实践手册', '覆盖注册发现、网关、限流、消息队列和部署。', 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=900&q=80', 88.00, 42, 'ON_SALE'),
+    (105, 10, '无线鼠标', '轻量低延迟，适合办公和学习。', 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=900&q=80', 129.00, 15, 'DRAFT')
 ON DUPLICATE KEY UPDATE
     category_id = VALUES(category_id),
     name = VALUES(name),
     description = VALUES(description),
+    image_url = VALUES(image_url),
     price = VALUES(price),
     stock = VALUES(stock),
     status = VALUES(status),

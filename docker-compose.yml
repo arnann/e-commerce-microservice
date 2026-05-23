@@ -153,6 +153,7 @@ services:
       NACOS_DISCOVERY_ENABLED: "true"
       NACOS_SERVER_ADDR: nacos:8848
       SENTINEL_DASHBOARD: sentinel-dashboard:8858
+      PRODUCT_IMAGE_UPLOAD_DIR: /app/uploads/product-images
       SEATA_ENABLED: "true"
       SEATA_SERVER_ADDR: seata-server:8091
       SEATA_TX_SERVICE_GROUP: default_tx_group
@@ -168,6 +169,8 @@ services:
         condition: service_started
     ports:
       - "8102:8102"
+    volumes:
+      - product-image-data:/app/uploads/product-images
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8102/products/health > /dev/null"]
       interval: 10s
@@ -302,3 +305,4 @@ services:
 
 volumes:
   mysql-data:
+  product-image-data:

@@ -12,11 +12,17 @@ public interface ProductRepository {
 
     List<Category> findCategories();
 
-    ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock);
+    default ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock) {
+        return createProduct(categoryId, name, description, null, price, stock);
+    }
+
+    ProductSummary createProduct(Long categoryId, String name, String description, String imageUrl, BigDecimal price, int stock);
 
     Optional<ProductSummary> findProduct(Long id);
 
     ProductSummary save(ProductSummary product);
 
     List<ProductSummary> findAll();
+
+    void deleteProduct(Long id);
 }

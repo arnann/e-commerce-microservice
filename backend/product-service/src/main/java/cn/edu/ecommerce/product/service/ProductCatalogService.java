@@ -24,6 +24,10 @@ public class ProductCatalogService {
     }
 
     public ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock) {
+        return createProduct(categoryId, name, description, null, price, stock);
+    }
+
+    public ProductSummary createProduct(Long categoryId, String name, String description, String imageUrl, BigDecimal price, int stock) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("product name required");
         }
@@ -33,7 +37,7 @@ public class ProductCatalogService {
         if (stock < 0) {
             throw new IllegalArgumentException("stock cannot be negative");
         }
-        return repository.createProduct(categoryId, name.trim(), description, price, stock);
+        return repository.createProduct(categoryId, name.trim(), description, normalizeImageUrl(imageUrl), price, stock);
     }
 
     public List<Category> listCategories() {
@@ -49,6 +53,10 @@ public class ProductCatalogService {
     }
 
     public ProductSummary updateProduct(Long productId, Long categoryId, String name, String description, BigDecimal price, int stock, ProductStatus status) {
+        return updateProduct(productId, categoryId, name, description, null, price, stock, status);
+    }
+
+    public ProductSummary updateProduct(Long productId, Long categoryId, String name, String description, String imageUrl, BigDecimal price, int stock, ProductStatus status) {
         ProductSummary current = getProduct(productId);
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("product name required");
@@ -64,12 +72,18 @@ public class ProductCatalogService {
                 categoryId == null ? current.categoryId() : categoryId,
                 name.trim(),
                 description,
+                imageUrl == null ? current.imageUrl() : normalizeImageUrl(imageUrl),
                 price,
                 stock,
                 status == null ? current.status() : status,
                 current.createdAt()
         );
         return repository.save(next);
+    }
+
+    public void deleteProduct(Long productId) {
+        getProduct(productId);
+        repository.deleteProduct(productId);
     }
 
     public ProductSummary reserveStock(Long productId, int quantity) {
@@ -93,5 +107,13 @@ public class ProductCatalogService {
 
     public List<ProductSummary> listProducts() {
         return repository.findAll();
+    }
+
+    private String normalizeImageUrl(String imageUrl) {
+        if (imageUrl == null) {
+            return null;
+        }
+        String normalized = imageUrl.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 }

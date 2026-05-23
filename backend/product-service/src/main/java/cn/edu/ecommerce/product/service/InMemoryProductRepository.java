@@ -34,7 +34,7 @@ public class InMemoryProductRepository implements ProductRepository {
     }
 
     @Override
-    public ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock) {
+    public ProductSummary createProduct(Long categoryId, String name, String description, String imageUrl, BigDecimal price, int stock) {
         if (!categories.containsKey(categoryId)) {
             throw new IllegalArgumentException("category not found");
         }
@@ -44,6 +44,7 @@ public class InMemoryProductRepository implements ProductRepository {
                 categoryId,
                 name,
                 description,
+                imageUrl,
                 price,
                 stock,
                 ProductStatus.DRAFT,
@@ -69,5 +70,10 @@ public class InMemoryProductRepository implements ProductRepository {
         return products.values().stream()
                 .sorted(Comparator.comparing(ProductSummary::id))
                 .toList();
+    }
+
+    @Override
+    public void deleteProduct(Long id) {
+        products.remove(id);
     }
 }

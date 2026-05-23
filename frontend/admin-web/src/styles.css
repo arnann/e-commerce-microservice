@@ -283,6 +283,18 @@ th {
   padding: 6px 10px;
 }
 
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.muted-text {
+  color: #697468;
+  font-size: 13px;
+}
+
 .danger {
   color: #b23b2c;
   font-weight: 700;
@@ -369,6 +381,19 @@ th {
 .form-panel textarea {
   width: 100%;
   background: #ffffff;
+}
+
+.image-preview {
+  margin-bottom: 14px;
+}
+
+.image-preview img {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(29, 36, 32, 0.12);
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .form-actions,

@@ -53,6 +53,7 @@ const users = ref([]);
 const notices = ref([]);
 const services = ref([]);
 const productDraft = reactive(emptyProduct());
+const uploadingProductImage = ref(false);
 const categoryDraft = reactive({ name: '' });
 const noticeDraft = reactive({ title: '', content: '' });
 const userDraft = reactive(emptyUser());
@@ -216,7 +217,7 @@ async function refreshServices() {
 }
 
 function emptyProduct() {
-  return { id: null, categoryId: null, name: '', description: '', price: 0, stock: 0, status: 'DRAFT' };
+  return { id: null, categoryId: null, name: '', description: '', imageUrl: '', price: 0, stock: 0, status: 'DRAFT' };
 }
 
 function editProduct(product) {
@@ -233,6 +234,7 @@ async function saveProduct() {
     categoryId: Number(productDraft.categoryId),
     name: productDraft.name,
     description: productDraft.description,
+    imageUrl: productDraft.imageUrl?.trim() || null,
     price: Number(productDraft.price),
     stock: Number(productDraft.stock),
     status: productDraft.status
@@ -250,6 +252,46 @@ async function saveProduct() {
   pages.products = 1;
   newProduct();
   showToast('商品已保存');
+}
+
+async function uploadProductImage(event) {
+  const file = event.target.files?.[0];
+  if (!file) {
+    return;
+  }
+  const formData = new FormData();
+  formData.append('file', file);
+  uploadingProductImage.value = true;
+  try {
+    const response = await fetch(`${API_BASE}/products/upload`, {
+      method: 'POST',
+      headers: currentAdmin.value?.token ? { Authorization: `Bearer ${currentAdmin.value.token}` } : undefined,
+      body: formData
+    });
+    const payload = await response.json();
+    if (!response.ok || payload.code !== 200) {
+      throw new Error(payload.message || '上传失败');
+    }
+    productDraft.imageUrl = payload.data;
+    showToast('商品图片已上传');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    uploadingProductImage.value = false;
+    event.target.value = '';
+  }
+}
+
+async function deleteProduct(product) {
+  if (!window.confirm(`确认删除商品“${product.name}”吗？`)) {
+    return;
+  }
+  await api(`/products/${product.id}`, { method: 'DELETE' });
+  if (productDraft.id === product.id) {
+    newProduct();
+  }
+  await loadProducts();
+  showToast('商品已删除');
 }
 
 async function saveCategory() {
@@ -460,12 +502,14 @@ newProduct();
           <div class="workspace-block">
             <div class="section-title"><h2>商品列表</h2><span>{{ filteredProducts.length }} 条记录</span></div>
             <table>
-              <thead><tr><th>SKU</th><th>商品</th><th>分类</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>SKU</th><th>图片</th><th>商品</th><th>分类</th><th>价格</th><th>库存</th><th>状态</th><th>操作</th></tr></thead>
               <tbody>
                 <tr v-for="product in productPage.items" :key="product.id">
-                  <td>{{ product.sku }}</td><td>{{ product.name }}</td><td>{{ product.category }}</td><td>¥{{ product.price }}</td>
+                  <td>{{ product.sku }}</td>
+                  <td><img v-if="product.imageUrl" class="product-thumb" :src="product.imageUrl" :alt="product.name" /><span v-else class="muted-text">未上传</span></td>
+                  <td>{{ product.name }}</td><td>{{ product.category }}</td><td>¥{{ product.price }}</td>
                   <td :class="{ danger: product.stock <= 5 }">{{ product.stock }}</td><td><span class="status" :data-status="product.status">{{ label(product.status) }}</span></td>
-                  <td class="table-actions"><button type="button" @click="editProduct(product)">编辑</button></td>
+                  <td class="table-actions"><button type="button" @click="editProduct(product)">编辑</button><button type="button" @click="deleteProduct(product)">删除</button></td>
                 </tr>
               </tbody>
             </table>
@@ -479,6 +523,9 @@ newProduct();
             <div class="section-title"><h2>{{ productDraft.id ? '编辑商品' : '新增商品' }}</h2></div>
             <label>商品名称<input v-model="productDraft.name" required /></label>
             <label>描述<textarea v-model="productDraft.description" rows="4"></textarea></label>
+            <label>商品图片<input accept="image/*" :disabled="uploadingProductImage" type="file" @change="uploadProductImage" /></label>
+            <label>图片地址<input v-model="productDraft.imageUrl" placeholder="/api/products/uploads/xxx.png 或外链" /></label>
+            <div v-if="productDraft.imageUrl" class="image-preview"><img :src="productDraft.imageUrl" alt="商品预览" /></div>
             <label>分类<select v-model.number="productDraft.categoryId"><option v-for="category in categories" :key="category.id" :value="category.id">{{ category.name }}</option></select></label>
             <label>价格<input v-model.number="productDraft.price" min="0" type="number" /></label>
             <label>库存<input v-model.number="productDraft.stock" min="0" type="number" /></label>

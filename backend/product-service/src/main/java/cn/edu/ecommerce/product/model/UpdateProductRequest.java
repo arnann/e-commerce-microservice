@@ -6,6 +6,7 @@ public record UpdateProductRequest(
         Long categoryId,
         String name,
         String description,
+        String imageUrl,
         BigDecimal price,
         int stock,
         ProductStatus status

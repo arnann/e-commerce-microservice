@@ -51,16 +51,16 @@ public class JdbcProductRepository implements ProductRepository {
     }
 
     @Override
-    public ProductSummary createProduct(Long categoryId, String name, String description, BigDecimal price, int stock) {
+    public ProductSummary createProduct(Long categoryId, String name, String description, String imageUrl, BigDecimal price, int stock) {
         if (!categoryExists(categoryId)) {
             throw new IllegalArgumentException("category not found");
         }
         long id = productIds.nextId();
         jdbcClient.sql("""
-                        insert into product_spu (id, category_id, name, description, price, stock, status)
-                        values (?, ?, ?, ?, ?, ?, 'DRAFT')
+                        insert into product_spu (id, category_id, name, description, image_url, price, stock, status)
+                        values (?, ?, ?, ?, ?, ?, ?, 'DRAFT')
                         """)
-                .params(id, categoryId, name, description, price, stock)
+                .params(id, categoryId, name, description, imageUrl, price, stock)
                 .update();
         return findProduct(id).orElseThrow();
     }
@@ -68,7 +68,7 @@ public class JdbcProductRepository implements ProductRepository {
     @Override
     public Optional<ProductSummary> findProduct(Long id) {
         return jdbcClient.sql("""
-                        select id, category_id, name, description, price, stock, status, create_time
+                        select id, category_id, name, description, image_url, price, stock, status, create_time
                         from product_spu
                         where id = ? and deleted = 0
                         """)
@@ -81,13 +81,14 @@ public class JdbcProductRepository implements ProductRepository {
     public ProductSummary save(ProductSummary product) {
         jdbcClient.sql("""
                         update product_spu
-                        set category_id = ?, name = ?, description = ?, price = ?, stock = ?, status = ?
+                        set category_id = ?, name = ?, description = ?, image_url = ?, price = ?, stock = ?, status = ?
                         where id = ? and deleted = 0
                         """)
                 .params(
                         product.categoryId(),
                         product.name(),
                         product.description(),
+                        product.imageUrl(),
                         product.price(),
                         product.stock(),
                         product.status().name(),
@@ -100,13 +101,20 @@ public class JdbcProductRepository implements ProductRepository {
     @Override
     public List<ProductSummary> findAll() {
         return jdbcClient.sql("""
-                        select id, category_id, name, description, price, stock, status, create_time
+                        select id, category_id, name, description, image_url, price, stock, status, create_time
                         from product_spu
                         where deleted = 0
                         order by id
                         """)
                 .query(this::mapProduct)
                 .list();
+    }
+
+    @Override
+    public void deleteProduct(Long id) {
+        jdbcClient.sql("update product_spu set deleted = 1 where id = ? and deleted = 0")
+                .param(id)
+                .update();
     }
 
     private boolean categoryExists(Long categoryId) {
@@ -123,6 +131,7 @@ public class JdbcProductRepository implements ProductRepository {
                 rs.getLong("category_id"),
                 rs.getString("name"),
                 rs.getString("description"),
+                rs.getString("image_url"),
                 rs.getBigDecimal("price"),
                 rs.getInt("stock"),
                 ProductStatus.valueOf(rs.getString("status")),

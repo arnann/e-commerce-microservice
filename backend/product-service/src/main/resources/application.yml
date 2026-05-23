@@ -31,3 +31,7 @@ seata:
       default_tx_group: ${SEATA_SERVICE_GROUP:default}
     grouplist:
       default: ${SEATA_SERVER_ADDR:localhost:8091}
+
+product:
+  image:
+    upload-dir: ${PRODUCT_IMAGE_UPLOAD_DIR:uploads/product-images}
